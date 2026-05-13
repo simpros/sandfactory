@@ -10,6 +10,9 @@ const REPO_ROOT = resolve(import.meta.dirname, "../../..");
 const DEFAULT_DATABASE_URL = "file:.data/sandfactory.sqlite";
 const MIGRATIONS_FOLDER = resolve(REPO_ROOT, "packages/db/drizzle");
 
+// Track which DB files have had migrations applied this process lifetime.
+const migratedDbs = new Set<string>();
+
 function resolveDatabasePath(databaseUrl = DEFAULT_DATABASE_URL) {
   if (databaseUrl.startsWith("file:")) {
     return resolve(REPO_ROOT, databaseUrl.slice("file:".length));
@@ -36,9 +39,10 @@ export function createDb(
     schema,
   });
 
-  migrate(db, {
-    migrationsFolder: MIGRATIONS_FOLDER,
-  });
+  if (!migratedDbs.has(databaseFilePath)) {
+    migrate(db, { migrationsFolder: MIGRATIONS_FOLDER });
+    migratedDbs.add(databaseFilePath);
+  }
 
   return {
     db,

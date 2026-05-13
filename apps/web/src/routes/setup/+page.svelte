@@ -31,12 +31,8 @@
     await goto(resolve("/"));
   }
 
-  const steps = [
-    { label: "Introduction", done: false },
-    { label: "Configuration", done: false },
-    { label: "Complete", done: false },
-  ];
-  const currentStep = $derived(apiToken ? 2 : 0);
+  const steps = ["Introduction", "Configuration", "Complete"];
+  const currentStep = $derived(apiToken ? 2 : 1);
 </script>
 
 <svelte:head>
@@ -88,7 +84,7 @@
             <!-- Step list -->
             <div style="margin-bottom: 8px;">
               <hr class="mac9-hr" style="margin-bottom: 10px;">
-              {#each steps as step, i (step.label)}
+              {#each steps as step, i (step)}
                 <div
                   class="flex items-center gap-2 py-1 text-[11px]"
                   style={i === currentStep ? "font-weight: bold; color: #000;" : "color: #666;"}
@@ -100,7 +96,7 @@
                   {:else}
                     <span style="color: #aaaaaa; font-size: 10px;">○</span>
                   {/if}
-                  <span>{step.label}</span>
+                  <span>{step}</span>
                 </div>
               {/each}
             </div>

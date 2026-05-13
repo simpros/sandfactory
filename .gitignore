@@ -24,8 +24,10 @@ dist/
 
 # Database files
 **/*.db
-**/*.sqlite*
+**/*.sqlite
 **/*.sqlite3
+**/*.sqlite-wal
+**/*.sqlite-shm
 
 # OS files
 .DS_Store

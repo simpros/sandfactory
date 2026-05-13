@@ -1,7 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { invalid } from "@sveltejs/kit";
 import { command, form, query } from "$app/server";
-import { desc } from "drizzle-orm";
 import { createDb, apiTokens, settings } from "@sandfactory/db";
 import * as v from "valibot";
 
@@ -60,49 +59,54 @@ export const getSetupStatus = query(() => {
 });
 
 export const saveSetup = form(setupSchema, async ({ baseUrl, repoRoot }) => {
-  const currentStatus = getSetupStatusSnapshot();
-
-  if (currentStatus.setupComplete) {
-    invalid("Sandfactory has already been configured.");
-  }
-
   const database = createDb();
   const updatedAt = new Date().toISOString();
   const apiToken = generateApiToken();
 
   try {
-    database.db.insert(settings)
-      .values({ key: "base_url", value: baseUrl, updatedAt })
-      .onConflictDoUpdate({
-        target: settings.key,
-        set: { value: baseUrl, updatedAt },
-      })
-      .run();
+    const result = database.sqlite.transaction(() => {
+      const rows = database.db
+        .select({ key: settings.key, value: settings.value })
+        .from(settings)
+        .all();
 
-    database.db.insert(settings)
-      .values({ key: "repo_root", value: repoRoot, updatedAt })
-      .onConflictDoUpdate({
-        target: settings.key,
-        set: { value: repoRoot, updatedAt },
-      })
-      .run();
+      if (mapSettings(rows) !== null) {
+        return null;
+      }
 
-    database.db.delete(apiTokens).run();
-    database.db.insert(apiTokens)
-      .values({
-        tokenHash: hashApiToken(apiToken),
-        createdAt: updatedAt,
-        lastUsedAt: null,
-      })
-      .run();
+      database.db.insert(settings)
+        .values({ key: "base_url", value: baseUrl, updatedAt })
+        .onConflictDoUpdate({
+          target: settings.key,
+          set: { value: baseUrl, updatedAt },
+        })
+        .run();
 
-    return {
-      apiToken,
-      settings: {
-        baseUrl,
-        repoRoot,
-      },
-    };
+      database.db.insert(settings)
+        .values({ key: "repo_root", value: repoRoot, updatedAt })
+        .onConflictDoUpdate({
+          target: settings.key,
+          set: { value: repoRoot, updatedAt },
+        })
+        .run();
+
+      database.db.delete(apiTokens).run();
+      database.db.insert(apiTokens)
+        .values({
+          tokenHash: hashApiToken(apiToken),
+          createdAt: updatedAt,
+          lastUsedAt: null,
+        })
+        .run();
+
+      return { apiToken, settings: { baseUrl, repoRoot } };
+    })();
+
+    if (result === null) {
+      invalid("Sandfactory has already been configured.");
+    }
+
+    return result;
   } finally {
     database.close();
   }
@@ -114,29 +118,18 @@ export const regenerateApiToken = command(async () => {
   const apiToken = generateApiToken();
 
   try {
-    database.db.delete(apiTokens).run();
-    database.db.insert(apiTokens)
-      .values({
-        tokenHash: hashApiToken(apiToken),
-        createdAt: updatedAt,
-        lastUsedAt: null,
-      })
-      .run();
+    database.sqlite.transaction(() => {
+      database.db.delete(apiTokens).run();
+      database.db.insert(apiTokens)
+        .values({
+          tokenHash: hashApiToken(apiToken),
+          createdAt: updatedAt,
+          lastUsedAt: null,
+        })
+        .run();
+    })();
 
-    const storedToken = database.db
-      .select({
-        tokenHash: apiTokens.tokenHash,
-        createdAt: apiTokens.createdAt,
-        lastUsedAt: apiTokens.lastUsedAt,
-      })
-      .from(apiTokens)
-      .orderBy(desc(apiTokens.createdAt))
-      .all()[0];
-
-    return {
-      apiToken,
-      storedToken,
-    };
+    return { apiToken };
   } finally {
     database.close();
   }
