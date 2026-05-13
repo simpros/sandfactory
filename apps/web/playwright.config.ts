@@ -1,42 +1,13 @@
 import { defineConfig, devices } from "@playwright/test";
-import { execSync } from "node:child_process";
-import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const composeFile = join(__dirname, "tests/docker-compose.e2e.yml");
 
 const PORT = 3000;
 const BASE_URL = `http://localhost:${PORT}`;
 
-/**
- * Start/stop the e2e database container at config-load time so it is ready
- * before Playwright boots the webServer plugin.
- */
-if (!process.env.CI && !process.env.TEST_WORKER_INDEX) {
-  console.log("🐳 Starting e2e database container...");
-  execSync(
-    `docker compose -f ${composeFile} down -v 2>/dev/null || true`,
-    {
-      stdio: "inherit",
-    }
-  );
-  execSync(`docker compose -f ${composeFile} up -d --wait`, {
-    stdio: "inherit",
-  });
-  console.log("✅ Database container started\n");
-
-  const buildEntry = join(__dirname, "build/index.js");
-  if (!existsSync(buildEntry)) {
-    console.log("🔨 Building app for e2e tests...");
-    execSync("bun run build", { stdio: "inherit", cwd: __dirname });
-    console.log("✅ Build complete\n");
-  }
-}
-
 export default defineConfig({
-  globalTeardown: "./tests/config/docker.teardown.ts",
   testDir: "./tests",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -54,16 +25,16 @@ export default defineConfig({
   projects: [
     {
       name: "setup",
-      testMatch: /config\/global\.setup\.ts/,
+      testMatch: /config\/global-setup\.ts/,
       teardown: "teardown",
     },
     {
       name: "teardown",
-      testMatch: /config\/global\.teardown\.ts/,
+      testMatch: /config\/global-teardown\.ts/,
     },
     {
       name: "chromium",
-      testMatch: /\.e2e\.ts$/,
+      testMatch: /-e2e\.ts$/,
       use: { ...devices["Desktop Chrome"] },
       dependencies: ["setup"],
     },
@@ -71,9 +42,10 @@ export default defineConfig({
   webServer: {
     command: `bun run ${join(__dirname, "build/index.js")}`,
     url: BASE_URL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120_000,
     env: {
+      DATABASE_URL: "file:.data/e2e.sqlite",
       PORT: String(PORT),
       ORIGIN: BASE_URL,
     },

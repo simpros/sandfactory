@@ -1,10 +1,26 @@
-/**
- * Database setup script — run with bun (not Node.js).
- * Called from global.setup.ts via execSync.
- *
- * Usage: DATABASE_URL=... bun run tests/config/setup-db.ts
- */
+import { mkdirSync, rmSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 
-console.log("📊 Database setup placeholder...");
+const repoRoot = resolve(import.meta.dirname, "../../../..");
+
+function resolveDatabasePath(databaseUrl: string) {
+  if (databaseUrl.startsWith("file:")) {
+    return resolve(repoRoot, databaseUrl.slice("file:".length));
+  }
+
+  return resolve(repoRoot, databaseUrl);
+}
+
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is required for e2e setup.");
+}
+
+const databasePath = resolveDatabasePath(databaseUrl);
+
+mkdirSync(dirname(databasePath), { recursive: true });
+rmSync(databasePath, { force: true });
+
+console.log(`📊 Prepared SQLite database at ${databasePath}`);
 console.log("✅ Setup complete\n");
-process.exit(0);

@@ -24,7 +24,7 @@ dist/
 
 # Database files
 **/*.db
-**/*.sqlite
+**/*.sqlite*
 **/*.sqlite3
 
 # OS files

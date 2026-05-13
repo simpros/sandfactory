@@ -1,1 +1,246 @@
 @import "tailwindcss";
+
+/* ── Mac OS 9 Platinum — base reset ───────────── */
+:root {
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: #3a6ea5;
+  font-family: "Geneva", "Charcoal", "Verdana", "Lucida Grande", sans-serif;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #000000;
+  cursor: default;
+}
+
+input,
+textarea,
+select {
+  cursor: text;
+  user-select: text;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+button {
+  cursor: default;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+a {
+  cursor: pointer;
+}
+
+::selection {
+  background: #2255cc;
+  color: #ffffff;
+}
+
+/* ── Mac OS 9 window ──────────────────────────── */
+.mac9-window {
+  background: #ececec;
+  border: 1px solid #777777;
+  box-shadow: 3px 4px 14px rgba(0, 0, 0, 0.38);
+}
+
+/* ── Mac OS 9 title bar — pinstripe ──────────── */
+.mac9-titlebar {
+  height: 20px;
+  background: repeating-linear-gradient(
+    to bottom,
+    #8c8c8c 0px,
+    #8c8c8c 1px,
+    #d8d8d8 1px,
+    #d8d8d8 2px
+  );
+  border-bottom: 1px solid #777777;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.mac9-titlebar span {
+  font-size: 12px;
+  font-weight: bold;
+  color: #000000;
+  line-height: 1;
+}
+
+/* Close / zoom / shade buttons */
+.mac9-titlebar-btn {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  background: #d4d4d4;
+  border: 1px solid #606060;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  line-height: 1;
+}
+
+.mac9-titlebar-btn:active {
+  background: #aaaaaa;
+}
+
+/* ── Mac OS 9 button ──────────────────────────── */
+.mac9-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  height: 22px;
+  padding: 0 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #d8d8d8 100%);
+  border: 1px solid #888888;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: normal;
+  color: #000000;
+  cursor: default;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.mac9-btn:active:not(:disabled) {
+  background: linear-gradient(180deg, #b8b8b8 0%, #d8d8d8 100%);
+}
+
+.mac9-btn:disabled {
+  color: #888888;
+}
+
+/* Default / primary button — bold rounded border */
+.mac9-btn-primary {
+  border: 2px solid #222222;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.mac9-btn-primary:active:not(:disabled) {
+  background: linear-gradient(180deg, #aaaaaa 0%, #cccccc 100%);
+}
+
+/* ── Mac OS 9 text field ──────────────────────── */
+.mac9-field {
+  height: 22px;
+  padding: 0 5px;
+  background: #ffffff;
+  border: 1px solid #888888;
+  font-size: 12px;
+  font-family: inherit;
+  color: #000000;
+  outline: none;
+  border-radius: 0;
+}
+
+.mac9-field:focus {
+  border-color: #3366cc;
+  box-shadow: 0 0 0 2px rgba(51, 102, 204, 0.28);
+}
+
+/* ── Mac OS 9 etched divider ──────────────────── */
+.mac9-hr {
+  border: none;
+  border-top: 1px solid #aaaaaa;
+  box-shadow: 0 1px 0 #ffffff;
+  margin: 0;
+}
+
+/* ── Mac OS 9 labeled section ─────────────────── */
+.mac9-group {
+  border: 1px solid #aaaaaa;
+  box-shadow: inset 0 0 0 1px #ffffff;
+  padding: 16px 10px 10px;
+  margin-bottom: 10px;
+  background: #ececec;
+}
+
+.mac9-group legend {
+  padding: 0 4px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #000000;
+  background: #ececec;
+}
+
+/* ── Mac OS 9 content area (white) ────────────── */
+.mac9-content {
+  background: #ffffff;
+  border: 1px solid #aaaaaa;
+  box-shadow: inset 0 0 0 1px #ffffff;
+}
+
+/* ── Mac OS 9 menubar ─────────────────────────── */
+.mac9-menubar {
+  display: flex;
+  align-items: center;
+  height: 20px;
+  background: #dddddd;
+  border-bottom: 1px solid #888888;
+  padding: 0 4px;
+  user-select: none;
+  box-shadow: inset 0 -1px 0 #bbbbbb;
+}
+
+.mac9-menu-item {
+  padding: 0 8px;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  color: #000;
+  border-radius: 2px;
+}
+
+.mac9-menu-item:hover,
+.mac9-menu-item.active {
+  background: #2255cc;
+  color: #ffffff;
+}
+
+.mac9-menu-item-bold {
+  font-weight: bold;
+}
+
+/* ── Mac OS 9 status bar ──────────────────────── */
+.mac9-statusbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 18px;
+  padding: 0 6px;
+  background: #dddddd;
+  border-top: 1px solid #aaaaaa;
+  box-shadow: inset 0 1px 0 #eeeeee;
+  font-size: 11px;
+  color: #000;
+}
+
+/* ── Mac OS 9 scrollbar track (decorative) ────── */
+.mac9-scroll-track {
+  background: repeating-linear-gradient(
+    45deg,
+    #cccccc 0px,
+    #cccccc 1px,
+    #e8e8e8 1px,
+    #e8e8e8 4px
+  );
+}

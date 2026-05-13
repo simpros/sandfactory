@@ -1,23 +1,23 @@
 services:
   db:
     image: postgres:18-alpine
-    container_name: laber-postgres
+    container_name: sandfactory-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: laber
+      POSTGRES_DB: sandfactory
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your .env file}
     volumes:
-      - laber_postgres_data:/var/lib/postgresql/data
+      - sandfactory_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d laber"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sandfactory"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   web:
-    image: ghcr.io/simpros/laber:latest
-    container_name: laber-web
+    image: ghcr.io/simpros/sandfactory:latest
+    container_name: sandfactory-web
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -35,4 +35,4 @@ services:
         condition: service_healthy
 
 volumes:
-  laber_postgres_data:
+  sandfactory_postgres_data:

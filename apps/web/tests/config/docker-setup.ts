@@ -3,7 +3,7 @@ import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const composeFile = join(__dirname, "../docker-compose.e2e.yml");
+const composeFile = join(__dirname, "../docker-compose-e2e.yml");
 
 /**
  * @deprecated Docker lifecycle is now managed directly in playwright.config.ts.
