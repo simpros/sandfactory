@@ -54,5 +54,7 @@ export function createDb(
   };
 }
 
+export type Db = ReturnType<typeof createDb>;
+
 export { schema };
 export * from "./schema";

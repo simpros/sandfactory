@@ -1,14 +1,12 @@
 import { redirect } from "@sveltejs/kit";
 
-import { createDb, settings } from "@sandfactory/db";
+import { settings } from "@sandfactory/db";
 
-export function load({ url }) {
-  const database = createDb();
-  const rows = database.db
+export function load({ locals, url }) {
+  const rows = locals.db
     .select({ key: settings.key, value: settings.value })
     .from(settings)
     .all();
-  database.close();
 
   const values = new Map(rows.map((row) => [row.key, row.value]));
   const setupStatus = {

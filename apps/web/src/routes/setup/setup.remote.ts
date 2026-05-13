@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { invalid } from "@sveltejs/kit";
-import { command, form, query } from "$app/server";
-import { createDb, apiTokens, settings } from "@sandfactory/db";
+import { command, form, getRequestEvent, query } from "$app/server";
+import { apiTokens, settings } from "@sandfactory/db";
 import * as v from "valibot";
 
 const setupSchema = v.object({
@@ -26,26 +26,6 @@ function mapSettings(rows: Array<{ key: string; value: string }>): SetupSettings
   return { baseUrl, repoRoot };
 }
 
-function getSetupStatusSnapshot() {
-  const database = createDb();
-
-  try {
-    const rows = database.db
-      .select({ key: settings.key, value: settings.value })
-      .from(settings)
-      .all();
-
-    const currentSettings = mapSettings(rows);
-
-    return {
-      settings: currentSettings,
-      setupComplete: currentSettings !== null,
-    };
-  } finally {
-    database.close();
-  }
-}
-
 function generateApiToken() {
   return `sf_${randomBytes(24).toString("base64url")}`;
 }
@@ -55,82 +35,80 @@ function hashApiToken(token: string) {
 }
 
 export const getSetupStatus = query(() => {
-  return getSetupStatusSnapshot();
+  const { db } = getRequestEvent().locals;
+  const rows = db
+    .select({ key: settings.key, value: settings.value })
+    .from(settings)
+    .all();
+  const currentSettings = mapSettings(rows);
+  return { settings: currentSettings, setupComplete: currentSettings !== null };
 });
 
 export const saveSetup = form(setupSchema, async ({ baseUrl, repoRoot }) => {
-  const database = createDb();
+  const { db, sqlite } = getRequestEvent().locals;
   const updatedAt = new Date().toISOString();
   const apiToken = generateApiToken();
 
-  try {
-    const result = database.sqlite.transaction(() => {
-      const rows = database.db
-        .select({ key: settings.key, value: settings.value })
-        .from(settings)
-        .all();
+  const result = sqlite.transaction(() => {
+    const rows = db
+      .select({ key: settings.key, value: settings.value })
+      .from(settings)
+      .all();
 
-      if (mapSettings(rows) !== null) {
-        return null;
-      }
-
-      database.db.insert(settings)
-        .values({ key: "base_url", value: baseUrl, updatedAt })
-        .onConflictDoUpdate({
-          target: settings.key,
-          set: { value: baseUrl, updatedAt },
-        })
-        .run();
-
-      database.db.insert(settings)
-        .values({ key: "repo_root", value: repoRoot, updatedAt })
-        .onConflictDoUpdate({
-          target: settings.key,
-          set: { value: repoRoot, updatedAt },
-        })
-        .run();
-
-      database.db.delete(apiTokens).run();
-      database.db.insert(apiTokens)
-        .values({
-          tokenHash: hashApiToken(apiToken),
-          createdAt: updatedAt,
-          lastUsedAt: null,
-        })
-        .run();
-
-      return { apiToken, settings: { baseUrl, repoRoot } };
-    })();
-
-    if (result === null) {
-      invalid("Sandfactory has already been configured.");
+    if (mapSettings(rows) !== null) {
+      return null;
     }
 
-    return result;
-  } finally {
-    database.close();
+    db.insert(settings)
+      .values({ key: "base_url", value: baseUrl, updatedAt })
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: { value: baseUrl, updatedAt },
+      })
+      .run();
+
+    db.insert(settings)
+      .values({ key: "repo_root", value: repoRoot, updatedAt })
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: { value: repoRoot, updatedAt },
+      })
+      .run();
+
+    db.delete(apiTokens).run();
+    db.insert(apiTokens)
+      .values({
+        tokenHash: hashApiToken(apiToken),
+        createdAt: updatedAt,
+        lastUsedAt: null,
+      })
+      .run();
+
+    return { apiToken, settings: { baseUrl, repoRoot } };
+  })();
+
+  if (result === null) {
+    invalid("Sandfactory has already been configured.");
   }
+
+  return result;
 });
 
 export const regenerateApiToken = command(async () => {
-  const database = createDb();
+  const { db, sqlite } = getRequestEvent().locals;
   const updatedAt = new Date().toISOString();
   const apiToken = generateApiToken();
 
-  try {
-    database.sqlite.transaction(() => {
-      database.db.delete(apiTokens).run();
-      database.db.insert(apiTokens)
-        .values({
-          tokenHash: hashApiToken(apiToken),
-          createdAt: updatedAt,
-          lastUsedAt: null,
-        })
-        .run();
-    })();
+  sqlite.transaction(() => {
+    db.delete(apiTokens).run();
+    db.insert(apiTokens)
+      .values({
+        tokenHash: hashApiToken(apiToken),
+        createdAt: updatedAt,
+        lastUsedAt: null,
+      })
+      .run();
+  })();
 
-    return { apiToken };
-  } finally {
-    database.close();
-  }
+  return { apiToken };
 });
