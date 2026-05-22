@@ -7,7 +7,6 @@ declare global {
     // interface Error {}
     interface Locals {
       db: Db["db"];
-      sqlite: Db["sqlite"];
     }
     // interface PageData {}
     // interface PageState {}

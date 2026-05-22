@@ -1,20 +1,4 @@
 services:
-  db:
-    image: postgres:18-alpine
-    container_name: sandfactory-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: sandfactory
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your .env file}
-    volumes:
-      - sandfactory_postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d sandfactory"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   web:
     image: ghcr.io/simpros/sandfactory:latest
     container_name: sandfactory-web
@@ -30,9 +14,3 @@ services:
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
       EMAIL_FROM: ${EMAIL_FROM:-noreply@example.com}
-    depends_on:
-      db:
-        condition: service_healthy
-
-volumes:
-  sandfactory_postgres_data:

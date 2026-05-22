@@ -45,12 +45,12 @@ export const getSetupStatus = query(() => {
 });
 
 export const saveSetup = form(setupSchema, async ({ baseUrl, repoRoot }) => {
-  const { db, sqlite } = getRequestEvent().locals;
+  const { db } = getRequestEvent().locals;
   const updatedAt = new Date().toISOString();
   const apiToken = generateApiToken();
 
-  const result = sqlite.transaction(() => {
-    const rows = db
+  const result = db.transaction((tx) => {
+    const rows = tx
       .select({ key: settings.key, value: settings.value })
       .from(settings)
       .all();
@@ -59,7 +59,7 @@ export const saveSetup = form(setupSchema, async ({ baseUrl, repoRoot }) => {
       return null;
     }
 
-    db.insert(settings)
+    tx.insert(settings)
       .values({ key: "base_url", value: baseUrl, updatedAt })
       .onConflictDoUpdate({
         target: settings.key,
@@ -67,7 +67,7 @@ export const saveSetup = form(setupSchema, async ({ baseUrl, repoRoot }) => {
       })
       .run();
 
-    db.insert(settings)
+    tx.insert(settings)
       .values({ key: "repo_root", value: repoRoot, updatedAt })
       .onConflictDoUpdate({
         target: settings.key,
@@ -75,8 +75,8 @@ export const saveSetup = form(setupSchema, async ({ baseUrl, repoRoot }) => {
       })
       .run();
 
-    db.delete(apiTokens).run();
-    db.insert(apiTokens)
+    tx.delete(apiTokens).run();
+    tx.insert(apiTokens)
       .values({
         tokenHash: hashApiToken(apiToken),
         createdAt: updatedAt,
@@ -85,7 +85,7 @@ export const saveSetup = form(setupSchema, async ({ baseUrl, repoRoot }) => {
       .run();
 
     return { apiToken, settings: { baseUrl, repoRoot } };
-  })();
+  });
 
   if (result === null) {
     invalid("Sandfactory has already been configured.");
@@ -95,20 +95,20 @@ export const saveSetup = form(setupSchema, async ({ baseUrl, repoRoot }) => {
 });
 
 export const regenerateApiToken = command(async () => {
-  const { db, sqlite } = getRequestEvent().locals;
+  const { db } = getRequestEvent().locals;
   const updatedAt = new Date().toISOString();
   const apiToken = generateApiToken();
 
-  sqlite.transaction(() => {
-    db.delete(apiTokens).run();
-    db.insert(apiTokens)
+  db.transaction((tx) => {
+    tx.delete(apiTokens).run();
+    tx.insert(apiTokens)
       .values({
         tokenHash: hashApiToken(apiToken),
         createdAt: updatedAt,
         lastUsedAt: null,
       })
       .run();
-  })();
+  });
 
   return { apiToken };
 });
