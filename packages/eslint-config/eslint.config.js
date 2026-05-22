@@ -1,5 +1,5 @@
 import { includeIgnoreFile } from "@eslint/compat";
-import { config } from "@laber/eslint-config";
+import { config } from "@sandfactory/eslint-config";
 import { fileURLToPath } from "node:url";
 
 const gitignorePath = fileURLToPath(

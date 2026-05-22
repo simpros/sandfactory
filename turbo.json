@@ -32,9 +32,7 @@
     "test:e2e": {
       "cache": false
     },
-    "lint": {
-      "dependsOn": ["^lint"]
-    },
+    "lint": {},
     "format": {},
     "db:generate": {
       "cache": false

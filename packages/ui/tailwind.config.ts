@@ -1,5 +1,5 @@
 import type { Config } from "tailwindcss";
-import sharedConfig from "@laber/tailwind-config";
+import sharedConfig from "@sandfactory/tailwind-config";
 
 const config: Config = {
   content: ["./src/**/*.{svelte,ts,js}"],

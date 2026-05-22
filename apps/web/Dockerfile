@@ -10,7 +10,7 @@ FROM base AS prepare
 RUN bun add -g turbo@^2
 
 COPY . .
-RUN turbo prune @laber/web --docker
+RUN turbo prune @sandfactory/web --docker
 
 # ---- Install deps + build ----
 FROM base AS builder
@@ -24,7 +24,7 @@ RUN bun install --frozen-lockfile
 # Build the project
 COPY --from=prepare /app/out/full/ .
 COPY --from=prepare /app/packages/typescript-config/ ./packages/typescript-config/
-RUN bun run build --filter=@laber/web
+RUN bun run build --filter=@sandfactory/web
 
 # ---- Production runner ----
 FROM base AS runner

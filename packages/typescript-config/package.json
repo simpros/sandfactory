@@ -1,5 +1,5 @@
 {
-  "name": "@laber/typescript-config",
+  "name": "@sandfactory/typescript-config",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -11,6 +11,6 @@
     "lint": "eslint ."
   },
   "devDependencies": {
-    "@laber/eslint-config": "workspace:*"
+    "@sandfactory/eslint-config": "workspace:*"
   }
 }

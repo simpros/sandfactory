@@ -7,7 +7,7 @@ export async function configureLogging() {
     },
     loggers: [
       {
-        category: "laber",
+        category: "sandfactory",
         sinks: ["console"],
         lowestLevel: "info",
       },

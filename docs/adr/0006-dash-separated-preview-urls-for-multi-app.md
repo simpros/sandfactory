@@ -1,0 +1,3 @@
+# Dash-separated subdomain URLs for multi-app previews
+
+Preview URLs use a flat subdomain structure: the primary app gets `<short-id>.preview.example.com` and additional apps get `<short-id>-<app-name>.preview.example.com`. Dot-separated nested subdomains (e.g., `admin.<short-id>.preview.example.com`) were rejected because Cloudflare free tier wildcards only match a single subdomain level (`*.preview.example.com`), making nested patterns incompatible with the DNS and TLS setup. The dash-separated flat pattern keeps all preview URLs within one subdomain level, covered by a single wildcard record.
