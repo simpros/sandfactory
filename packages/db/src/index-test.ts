@@ -45,3 +45,25 @@ test("db setup runs migrations and exposes a usable Drizzle client", () => {
 
   database.close();
 });
+
+test("db setup still finds migrations when called from a nested app directory", () => {
+  const originalCwd = process.cwd();
+  const directory = mkdtempSync(join(tmpdir(), "sandfactory-db-nested-"));
+  createdDirectories.push(directory);
+
+  process.chdir(join(originalCwd, "apps/web"));
+
+  try {
+    const database = createDb(join(directory, "sandfactory.sqlite"));
+
+    const tables = database.sqlite
+      .query("select name from sqlite_master where type = 'table' and name = 'settings'")
+      .all();
+
+    expect(tables).toEqual([{ name: "settings" }]);
+
+    database.close();
+  } finally {
+    process.chdir(originalCwd);
+  }
+});

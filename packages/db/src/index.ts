@@ -1,12 +1,34 @@
 import { Database } from "bun:sqlite";
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { migrate } from "drizzle-orm/bun-sqlite/migrator";
 
 import * as schema from "./schema";
 
-const REPO_ROOT = resolve(import.meta.dirname, "../../..");
+function resolveRepoRoot() {
+  for (const startPath of [process.cwd(), import.meta.dirname]) {
+    let currentPath = resolve(startPath);
+
+    while (true) {
+      if (existsSync(resolve(currentPath, "packages/db/drizzle"))) {
+        return currentPath;
+      }
+
+      const parentPath = dirname(currentPath);
+
+      if (parentPath === currentPath) {
+        break;
+      }
+
+      currentPath = parentPath;
+    }
+  }
+
+  return resolve(import.meta.dirname, "../../..");
+}
+
+const REPO_ROOT = resolveRepoRoot();
 const DEFAULT_DATABASE_URL = "file:.data/sandfactory.sqlite";
 const MIGRATIONS_FOLDER = resolve(REPO_ROOT, "packages/db/drizzle");
 

@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { invalid } from "@sveltejs/kit";
 import { command, form, getRequestEvent, query } from "$app/server";
+import { SETUP_TOKEN_COOKIE } from "$lib/setup";
 import { apiTokens, settings } from "@sandfactory/db";
 import * as v from "valibot";
 
@@ -45,7 +46,8 @@ export const getSetupStatus = query(() => {
 });
 
 export const saveSetup = form(setupSchema, async ({ baseUrl, repoRoot }) => {
-  const { db } = getRequestEvent().locals;
+  const event = getRequestEvent();
+  const { db } = event.locals;
   const updatedAt = new Date().toISOString();
   const apiToken = generateApiToken();
 
@@ -90,6 +92,13 @@ export const saveSetup = form(setupSchema, async ({ baseUrl, repoRoot }) => {
   if (result === null) {
     invalid("Sandfactory has already been configured.");
   }
+
+  event.cookies.set(SETUP_TOKEN_COOKIE, "1", {
+    httpOnly: true,
+    maxAge: 60,
+    path: "/",
+    sameSite: "lax",
+  });
 
   return result;
 });

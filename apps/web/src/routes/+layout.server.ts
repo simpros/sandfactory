@@ -1,8 +1,9 @@
 import { redirect } from "@sveltejs/kit";
 
+import { SETUP_TOKEN_COOKIE } from "$lib/setup";
 import { settings } from "@sandfactory/db";
 
-export function load({ locals, url }) {
+export function load({ cookies, locals, url }) {
   const rows = locals.db
     .select({ key: settings.key, value: settings.value })
     .from(settings)
@@ -25,8 +26,15 @@ export function load({ locals, url }) {
     throw redirect(307, "/setup");
   }
 
-  // Do NOT redirect away from /setup when complete — the setup page needs
-  // to show the generated API token. The "Finish" button handles navigation.
+  if (setupStatus.setupComplete && isSetupRoute) {
+    const canShowSetupToken = cookies.get(SETUP_TOKEN_COOKIE) === "1";
+
+    if (!canShowSetupToken) {
+      throw redirect(307, "/");
+    }
+
+    cookies.delete(SETUP_TOKEN_COOKIE, { path: "/" });
+  }
 
   return setupStatus;
 }

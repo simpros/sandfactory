@@ -1,4 +1,3 @@
-import { test as setup } from "@playwright/test";
 import { mkdirSync, rmSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "url";
@@ -12,9 +11,15 @@ function resolveDatabasePath(url: string) {
   return resolve(repoRoot, url);
 }
 
-setup("global setup", async () => {
+function resetSqliteDatabase(databasePath: string) {
+  for (const path of [databasePath, `${databasePath}-wal`, `${databasePath}-shm`]) {
+    rmSync(path, { force: true });
+  }
+}
+
+export default async function globalSetup() {
   const databasePath = resolveDatabasePath(databaseUrl);
   mkdirSync(dirname(databasePath), { recursive: true });
-  rmSync(databasePath, { force: true });
+  resetSqliteDatabase(databasePath);
   console.log(`📊 Prepared SQLite database at ${databasePath}`);
-});
+}
