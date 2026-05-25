@@ -46,6 +46,12 @@ test("first launch requires setup and shows the generated API token once", async
   await expect(page.getByText("https://sandfactory.test")).toBeVisible();
   await expect(page.getByText("/srv/projects")).toBeVisible();
 
+  await page.getByRole("button", { name: /settings/i }).click();
+  await expect(page).toHaveURL(/\/settings$/);
+
+  await page.getByRole("button", { name: /dashboard/i }).click();
+  await expect(page).toHaveURL(/\/$/);
+
   await page.goto("/setup");
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByText(/setup complete/i)).not.toBeVisible();

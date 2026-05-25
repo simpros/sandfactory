@@ -1,14 +1,20 @@
 <script lang="ts">
+  import { resolve } from "$app/paths";
   import { PageFrame } from "@sandfactory/ui";
 
   let { data } = $props();
 
   const navItems = [
-    { icon: "🏠", label: "Dashboard", active: true },
-    { icon: "📁", label: "Projects", active: false },
-    { icon: "⚙", label: "Settings", active: false },
-    { icon: "🗝", label: "API Tokens", active: false },
-  ];
+    { icon: "🏠", label: "Dashboard", active: true, path: "/" },
+    { icon: "📁", label: "Projects", active: false, path: null },
+    {
+      icon: "⚙",
+      label: "Settings",
+      active: false,
+      path: "/settings",
+    },
+    { icon: "🗝", label: "API Tokens", active: false, path: null },
+  ] as const;
 </script>
 
 <svelte:head>
@@ -18,8 +24,7 @@
 <PageFrame>
   <div class="p-6">
     <!-- Main Finder-style application window -->
-    <div class="mac9-window inline-block w-full max-w-[680px]">
-
+    <div class="mac9-window inline-block w-full max-w-170">
       <!-- Pinstripe title bar -->
       <div class="mac9-titlebar">
         <button class="mac9-titlebar-btn" style="left: 6px;" type="button">
@@ -27,10 +32,18 @@
         </button>
         <span>Sandfactory</span>
         <div style="position:absolute; right:6px; display:flex; gap:3px;">
-          <button class="mac9-titlebar-btn" style="position:static;" type="button">
+          <button
+            class="mac9-titlebar-btn"
+            style="position:static;"
+            type="button"
+          >
             <span style="font-size:7px;">+</span>
           </button>
-          <button class="mac9-titlebar-btn" style="position:static;" type="button">
+          <button
+            class="mac9-titlebar-btn"
+            style="position:static;"
+            type="button"
+          >
             <span style="font-size:7px;">–</span>
           </button>
         </div>
@@ -44,8 +57,6 @@
         <span class="mac9-menu-item">Favorites</span>
         <span class="mac9-menu-item">Tools</span>
         <span class="mac9-menu-item">Help</span>
-        <!-- Apple mark on right like Finder -->
-        <span class="ml-auto mac9-menu-item" style="font-size:14px;">🍎</span>
       </div>
 
       <!-- Toolbar row -->
@@ -53,9 +64,19 @@
         class="flex items-center gap-1 bg-[#ececec] px-2 py-1"
         style="border-bottom: 1px solid #aaaaaa; box-shadow: inset 0 -1px 0 #ffffff;"
       >
-        <button class="mac9-btn" style="height:18px; font-size:11px; padding:0 8px; min-width:0;" type="button">⬆ Back</button>
-        <button class="mac9-btn" style="height:18px; font-size:11px; padding:0 8px; min-width:0;" type="button">🔄</button>
-        <div style="width:1px; height:16px; background:#aaaaaa; box-shadow: 1px 0 0 #ffffff; margin:0 2px;"></div>
+        <button
+          class="mac9-btn"
+          style="height:18px; font-size:11px; padding:0 8px; min-width:0;"
+          type="button">⬆ Back</button
+        >
+        <button
+          class="mac9-btn"
+          style="height:18px; font-size:11px; padding:0 8px; min-width:0;"
+          type="button">🔄</button
+        >
+        <div
+          style="width:1px; height:16px; background:#aaaaaa; box-shadow: 1px 0 0 #ffffff; margin:0 2px;"
+        ></div>
         <!-- Address field -->
         <div
           class="flex flex-1 items-center bg-white px-2 text-[11px] text-black"
@@ -67,53 +88,62 @@
 
       <!-- Two-panel content -->
       <div class="flex" style="min-height: 340px;">
-
         <!-- Left sidebar: navigation -->
         <div
-          class="flex w-[140px] shrink-0 flex-col"
+          class="flex w-35 shrink-0 flex-col"
           style="background: #dddddd; border-right: 1px solid #aaaaaa; box-shadow: inset -1px 0 0 #ffffff;"
         >
           <p
-            class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-[#555]"
+            class="px-3 py-1.5 text-[10px] font-bold tracking-wide text-[#555] uppercase"
             style="border-bottom: 1px solid #cccccc;"
           >
             Navigation
           </p>
           {#each navItems as item (item.label)}
-            <button
+            <a
               class={[
                 "flex items-center gap-2 px-3 py-1.5 text-left text-[12px]",
                 item.active
                   ? "bg-[#2255cc] text-white"
                   : "bg-transparent text-black hover:bg-[#2255cc] hover:text-white",
               ]}
+              href={item.path ? resolve(item.path) : undefined}
               type="button"
             >
               <span class="text-sm leading-none">{item.icon}</span>
               <span>{item.label}</span>
-            </button>
+            </a>
           {/each}
         </div>
 
         <!-- Main content: white area -->
         <div class="flex flex-1 flex-col bg-white p-4">
-          <p class="mb-1 text-[13px] font-bold text-black">System Information</p>
-          <hr class="mac9-hr mb-3">
+          <p class="mb-1 text-[13px] font-bold text-black">
+            System Information
+          </p>
+          <hr class="mac9-hr mb-3" />
 
           <!-- Server Settings groupbox -->
           <fieldset class="mac9-group">
             <legend>Server Settings</legend>
-            <div class="grid gap-y-2" style="grid-template-columns: 110px 1fr;">
-              <span class="text-[12px] font-bold text-[#333]">Base URL:</span>
+            <div
+              class="grid gap-y-2"
+              style="grid-template-columns: 110px 1fr;"
+            >
+              <span class="text-[12px] font-bold text-[#333]"
+                >Base URL:</span
+              >
               <span
-                class="break-all bg-white px-1.5 py-0.5 text-[12px] text-black"
+                class="bg-white px-1.5 py-0.5 text-[12px] break-all text-black"
                 style="border: 1px solid #cccccc;"
               >
                 {data.settings?.baseUrl ?? "—"}
               </span>
-              <span class="text-[12px] font-bold text-[#333]">Repo Root:</span>
+              <span class="text-[12px] font-bold text-[#333]"
+                >Repo Root:</span
+              >
               <span
-                class="break-all bg-white px-1.5 py-0.5 text-[12px] text-black"
+                class="bg-white px-1.5 py-0.5 text-[12px] break-all text-black"
                 style="border: 1px solid #cccccc;"
               >
                 {data.settings?.repoRoot ?? "—"}
@@ -127,7 +157,9 @@
             <div class="space-y-1.5 text-[12px]">
               <div class="flex items-center gap-2">
                 <span style="color: #338833;">●</span>
-                <span class="text-black">First-run configuration complete</span>
+                <span class="text-black"
+                  >First-run configuration complete</span
+                >
               </div>
               <div class="flex items-center gap-2">
                 <span style="color: #aaaaaa;">○</span>
