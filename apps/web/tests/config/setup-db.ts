@@ -20,7 +20,10 @@ if (!databaseUrl) {
 const databasePath = resolveDatabasePath(databaseUrl);
 
 mkdirSync(dirname(databasePath), { recursive: true });
-rmSync(databasePath, { force: true });
+
+for (const path of [databasePath, `${databasePath}-wal`, `${databasePath}-shm`]) {
+  rmSync(path, { force: true });
+}
 
 console.log(`📊 Prepared SQLite database at ${databasePath}`);
 console.log("✅ Setup complete\n");

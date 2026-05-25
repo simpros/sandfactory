@@ -1,31 +1,59 @@
 <script lang="ts">
-  import { resolve } from "$app/paths";
   import { PageFrame } from "@sandfactory/ui";
+  import { regenerateApiToken } from "../setup/setup.remote";
+  import { resolve } from "$app/paths";
 
   let { data } = $props();
 
+  let apiToken = $state("");
+  let errorMessage = $state("");
+  let isRegenerating = $state(false);
+
   const navItems = [
-    { icon: "🏠", label: "Dashboard", active: true, path: "/" },
+    {
+      icon: "🏠",
+      label: "Dashboard",
+      active: false,
+      path: "/",
+    },
     { icon: "📁", label: "Projects", active: false, path: null },
     {
       icon: "⚙",
       label: "Settings",
-      active: false,
+      active: true,
       path: "/settings",
     },
     { icon: "🗝", label: "API Tokens", active: false, path: null },
   ] as const;
+
+  async function rotateApiToken() {
+    isRegenerating = true;
+    errorMessage = "";
+
+    try {
+      const result = await regenerateApiToken();
+
+      if (result?.apiToken) {
+        apiToken = result.apiToken;
+        return;
+      }
+
+      errorMessage = "Could not regenerate the API token.";
+    } catch {
+      errorMessage = "Could not regenerate the API token.";
+    } finally {
+      isRegenerating = false;
+    }
+  }
 </script>
 
 <svelte:head>
-  <title>Sandfactory</title>
+  <title>Settings | Sandfactory</title>
 </svelte:head>
 
 <PageFrame>
   <div class="p-6">
-    <!-- Main Finder-style application window -->
-    <div class="mac9-window inline-block w-full max-w-170">
-      <!-- Pinstripe title bar -->
+    <div class="mac9-window inline-block w-full max-w-190">
       <div class="mac9-titlebar">
         <button class="mac9-titlebar-btn" style="left: 6px;" type="button">
           <span style="font-size:7px;">✕</span>
@@ -49,7 +77,6 @@
         </div>
       </div>
 
-      <!-- Menu bar inside window (Finder-style) -->
       <div class="mac9-menubar" style="border-top: none;">
         <span class="mac9-menu-item">File</span>
         <span class="mac9-menu-item">Edit</span>
@@ -59,7 +86,6 @@
         <span class="mac9-menu-item">Help</span>
       </div>
 
-      <!-- Toolbar row -->
       <div
         class="flex items-center gap-1 bg-[#ececec] px-2 py-1"
         style="border-bottom: 1px solid #aaaaaa; box-shadow: inset 0 -1px 0 #ffffff;"
@@ -77,18 +103,15 @@
         <div
           style="width:1px; height:16px; background:#aaaaaa; box-shadow: 1px 0 0 #ffffff; margin:0 2px;"
         ></div>
-        <!-- Address field -->
         <div
           class="flex flex-1 items-center bg-white px-2 text-[11px] text-black"
           style="height:18px; border:1px solid #aaaaaa; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.08);"
         >
-          Sandfactory › Dashboard
+          Sandfactory › Settings
         </div>
       </div>
 
-      <!-- Two-panel content -->
       <div class="flex" style="min-height: 340px;">
-        <!-- Left sidebar: navigation -->
         <div
           class="flex w-35 shrink-0 flex-col"
           style="background: #dddddd; border-right: 1px solid #aaaaaa; box-shadow: inset -1px 0 0 #ffffff;"
@@ -116,14 +139,15 @@
           {/each}
         </div>
 
-        <!-- Main content: white area -->
-        <div class="flex flex-1 flex-col bg-white p-4">
-          <p class="mb-1 text-[13px] font-bold text-black">
-            System Information
-          </p>
-          <hr class="mac9-hr mb-3" />
+        <div class="flex flex-1 flex-col gap-3 bg-white p-4">
+          <div>
+            <p class="mb-1 text-[13px] font-bold text-black">Settings</p>
+            <hr class="mac9-hr mb-3">
+            <p class="text-[12px] text-black">
+              Manage Sandfactory server configuration and rotate the CLI API token.
+            </p>
+          </div>
 
-          <!-- Server Settings groupbox -->
           <fieldset class="mac9-group">
             <legend>Server Settings</legend>
             <div
@@ -151,47 +175,62 @@
             </div>
           </fieldset>
 
-          <!-- Status groupbox -->
-          <fieldset class="mac9-group">
-            <legend>System Status</legend>
-            <div class="space-y-1.5 text-[12px]">
-              <div class="flex items-center gap-2">
-                <span style="color: #338833;">●</span>
-                <span class="text-black"
-                  >First-run configuration complete</span
-                >
-              </div>
-              <div class="flex items-center gap-2">
-                <span style="color: #aaaaaa;">○</span>
-                <span class="text-[#666]">No active agent runs</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span style="color: #aaaaaa;">○</span>
-                <span class="text-[#666]">No registered projects</span>
-              </div>
-            </div>
-          </fieldset>
-
-          <!-- Roadmap groupbox -->
           <fieldset class="mac9-group" style="margin-bottom: 0;">
-            <legend>Planned Features</legend>
-            <div class="space-y-1 text-[12px]">
-              {#each ["Project registration", "Agent run queue", "Preview environment lifecycle", "Cleanup automation via GitHub Actions"] as feat (feat)}
-                <div class="flex items-center gap-2 text-[#666]">
-                  <input class="m-0" disabled type="checkbox" />
-                  <span>{feat}</span>
+            <legend>API Token</legend>
+            <div class="space-y-3 text-[12px] text-black">
+              <p>
+                Use this token for CLI requests from automation. Regenerating it invalidates the previous token immediately.
+              </p>
+
+              <div class="flex items-center gap-2">
+                <button
+                  class="mac9-btn mac9-btn-primary"
+                  disabled={isRegenerating}
+                  onclick={rotateApiToken}
+                  type="button"
+                >
+                  {isRegenerating ? "Regenerating…" : "Regenerate API Token"}
+                </button>
+              </div>
+
+              {#if errorMessage}
+                <div
+                  class="px-3 py-2 text-[11px] text-red-700"
+                  style="background: #fff0f0; border: 1px solid #cc4444;"
+                >
+                  ⚠ {errorMessage}
                 </div>
-              {/each}
+              {/if}
+
+              {#if apiToken}
+                <div>
+                  <p class="mb-1 text-[12px] font-bold text-black">Replacement API Token</p>
+                  <div
+                    class="mb-3 w-full bg-white px-2 py-2"
+                    style="border: 1px solid #aaaaaa; box-shadow: inset 1px 1px 3px rgba(0,0,0,0.12);"
+                  >
+                    <code class="break-all text-[11px] text-black" style="font-family: Monaco, 'Courier New', monospace; user-select: text; cursor: text;">
+                      {apiToken}
+                    </code>
+                  </div>
+
+                  <div
+                    class="flex gap-2 px-3 py-2 text-[11px] text-black"
+                    style="background: #ffffcc; border: 1px solid #ccaa00;"
+                  >
+                    <span>⚠</span>
+                    <span>This is the only time the raw value will be shown. Update your automation now.</span>
+                  </div>
+                </div>
+              {/if}
             </div>
           </fieldset>
         </div>
       </div>
 
-      <!-- Resize handle + status bar -->
       <div class="mac9-statusbar">
         <span style="flex:1; font-size:11px; color:#333;">Ready</span>
         <span style="font-size:11px; color:#333;">1 item</span>
-        <!-- Resize handle (decorative) -->
         <div
           class="ml-2"
           style="width:15px; height:15px; background: repeating-linear-gradient(135deg, #aaaaaa 0px, #aaaaaa 1px, #dddddd 1px, #dddddd 3px);"
