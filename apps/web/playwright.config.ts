@@ -4,9 +4,9 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const PORT = 3000;
+const PORT = Number(process.env.PLAYWRIGHT_PORT ?? 3000);
 const BASE_URL = `http://localhost:${PORT}`;
-const HEALTHCHECK_URL = `${BASE_URL}/healthz`;
+const HEALTHCHECK_URL = `${BASE_URL}/api/healthz`;
 
 export default defineConfig({
   testDir: "./tests",

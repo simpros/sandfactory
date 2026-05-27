@@ -27,10 +27,13 @@
 </script>
 
 <div class="flex flex-col gap-1">
-  <label class="text-[12px] font-bold text-black" for={id}>{label}</label>
+  <label class="text-sm font-bold text-black" for={id}>{label}</label>
   <input
     {autocomplete}
-    class={["mac9-field w-full", error && "border-red-500"]}
+    class={[
+      "h-7 w-full px-2 bg-white border border-mac-border-dark text-sm text-black outline-none rounded-none focus:border-mac-highlight focus:shadow-mac-focus",
+      error && "border-red-500",
+    ]}
     {id}
     {name}
     oninput={handleInput}
@@ -39,6 +42,6 @@
     value={typeof value === "number" ? String(value) : value}
   />
   {#if error}
-    <p class="text-[11px] text-red-700">⚠ {error}</p>
+    <p class="text-[13px] text-red-700">⚠ {error}</p>
   {/if}
 </div>

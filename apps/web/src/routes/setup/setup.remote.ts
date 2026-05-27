@@ -1,63 +1,37 @@
-import { createHash, randomBytes } from "node:crypto";
 import { invalid } from "@sveltejs/kit";
 import { command, form, getRequestEvent, query } from "$app/server";
+import { auth } from "$lib/server/auth";
 import { SETUP_TOKEN_COOKIE } from "$lib/setup";
-import { apiTokens, settings } from "@sandfactory/db";
+import { mapSetupStatus, readSetupStatus } from "$lib/server/setup";
+import { getSingleUserEmail, getSingleUserName } from "@sandfactory/auth";
+import { settings } from "@sandfactory/db";
 import * as v from "valibot";
 
 const setupSchema = v.object({
   baseUrl: v.pipe(v.string(), v.trim(), v.url("Enter a valid URL.")),
+  loginPassword: v.pipe(v.string(), v.minLength(8, "Enter a password with at least 8 characters.")),
   repoRoot: v.pipe(v.string(), v.trim(), v.minLength(1, "Enter a repo root path.")),
 });
 
-type SetupSettings = {
-  baseUrl: string;
-  repoRoot: string;
-};
-
-function mapSettings(rows: Array<{ key: string; value: string }>): SetupSettings | null {
-  const values = new Map(rows.map((row) => [row.key, row.value]));
-  const baseUrl = values.get("base_url");
-  const repoRoot = values.get("repo_root");
-
-  if (!baseUrl || !repoRoot) {
-    return null;
-  }
-
-  return { baseUrl, repoRoot };
-}
-
-function generateApiToken() {
-  return `sf_${randomBytes(24).toString("base64url")}`;
-}
-
-function hashApiToken(token: string) {
-  return createHash("sha256").update(token).digest("hex");
-}
-
 export const getSetupStatus = query(() => {
   const { db } = getRequestEvent().locals;
-  const rows = db
-    .select({ key: settings.key, value: settings.value })
-    .from(settings)
-    .all();
-  const currentSettings = mapSettings(rows);
-  return { settings: currentSettings, setupComplete: currentSettings !== null };
+  const setupStatus = readSetupStatus(db);
+  return { settings: setupStatus.settings, setupComplete: setupStatus.setupComplete };
 });
 
-export const saveSetup = form(setupSchema, async ({ baseUrl, repoRoot }) => {
+export const saveSetup = form(setupSchema, async ({ baseUrl, loginPassword, repoRoot }) => {
   const event = getRequestEvent();
   const { db } = event.locals;
   const updatedAt = new Date().toISOString();
-  const apiToken = generateApiToken();
+  const currentStatus = readSetupStatus(db);
 
-  const result = db.transaction((tx) => {
+  const settingsResult = db.transaction((tx) => {
     const rows = tx
       .select({ key: settings.key, value: settings.value })
       .from(settings)
       .all();
 
-    if (mapSettings(rows) !== null) {
+    if (mapSetupStatus(rows, currentStatus.authConfigured).setupComplete) {
       return null;
     }
 
@@ -77,21 +51,42 @@ export const saveSetup = form(setupSchema, async ({ baseUrl, repoRoot }) => {
       })
       .run();
 
-    tx.delete(apiTokens).run();
-    tx.insert(apiTokens)
-      .values({
-        tokenHash: hashApiToken(apiToken),
-        createdAt: updatedAt,
-        lastUsedAt: null,
-      })
-      .run();
-
-    return { apiToken, settings: { baseUrl, repoRoot } };
+    return { settings: { baseUrl, repoRoot } };
   });
 
-  if (result === null) {
+  if (settingsResult === null) {
     invalid("Sandfactory has already been configured.");
   }
+
+  // Create user account if not yet configured
+  let userId: string;
+
+  if (!currentStatus.authConfigured) {
+    const signUpResult = await auth.api.signUpEmail({
+      body: {
+        name: getSingleUserName(),
+        email: getSingleUserEmail(),
+        password: loginPassword,
+      },
+      headers: event.request.headers,
+    });
+
+    userId = signUpResult.user.id;
+  } else {
+    // User already exists — look up their ID
+    const existingSession = await auth.api.getSession({
+      headers: event.request.headers,
+    });
+    userId = existingSession!.user.id;
+  }
+
+  // Create API key via better-auth
+  const apiKeyResult = await auth.api.createApiKey({
+    body: {
+      name: "default",
+      userId,
+    },
+  });
 
   event.cookies.set(SETUP_TOKEN_COOKIE, "1", {
     httpOnly: true,
@@ -100,24 +95,40 @@ export const saveSetup = form(setupSchema, async ({ baseUrl, repoRoot }) => {
     sameSite: "lax",
   });
 
-  return result;
+  return { apiToken: apiKeyResult.key, settings: settingsResult!.settings };
 });
 
 export const regenerateApiToken = command(async () => {
-  const { db } = getRequestEvent().locals;
-  const updatedAt = new Date().toISOString();
-  const apiToken = generateApiToken();
+  const event = getRequestEvent();
 
-  db.transaction((tx) => {
-    tx.delete(apiTokens).run();
-    tx.insert(apiTokens)
-      .values({
-        tokenHash: hashApiToken(apiToken),
-        createdAt: updatedAt,
-        lastUsedAt: null,
-      })
-      .run();
+  // Get the current user's session
+  const session = await auth.api.getSession({
+    headers: event.request.headers,
   });
 
-  return { apiToken };
+  if (!session) {
+    return null;
+  }
+
+  // List existing keys and delete them
+  const existingKeys = await auth.api.listApiKeys({
+    headers: event.request.headers,
+  });
+
+  for (const key of existingKeys.apiKeys) {
+    await auth.api.deleteApiKey({
+      body: { keyId: key.id },
+      headers: event.request.headers,
+    });
+  }
+
+  // Create a new key
+  const apiKeyResult = await auth.api.createApiKey({
+    body: {
+      name: "default",
+      userId: session.user.id,
+    },
+  });
+
+  return { apiToken: apiKeyResult.key };
 });

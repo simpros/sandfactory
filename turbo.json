@@ -7,7 +7,7 @@
       "env": [
         "DATABASE_URL",
         "BETTER_AUTH_SECRET",
-        "BETTER_AUTH_BASE_URL",
+        "BETTER_AUTH_URL",
         "SMTP_HOST",
         "SMTP_PORT",
         "SMTP_USER",

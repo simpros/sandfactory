@@ -1,7 +1,19 @@
 <script lang="ts">
   import "../app.css";
 
-  let { children } = $props();
+  import { authClient } from "@sandfactory/auth/client";
+  import type { LayoutProps } from "./$types";
+  import { PageFrame } from "@sandfactory/ui";
+
+  let { children, data }: LayoutProps = $props();
+
+  async function logout() {
+    await authClient.signOut();
+
+    window.location.href = "/login";
+  }
 </script>
 
-{@render children()}
+<PageFrame showLogout={data.authenticated} onLogout={logout}>
+  {@render children()}
+</PageFrame>
