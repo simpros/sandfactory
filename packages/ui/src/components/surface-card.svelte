@@ -16,31 +16,29 @@
   } = $props();
 </script>
 
-<div class={["mac9-window", className]}>
+<div class={["bg-mac-window border border-mac-border shadow-mac-window", className]}>
   {#if title}
     <!-- Pinstripe title bar -->
-    <div class="mac9-titlebar">
+    <div class="h-6 mac-pinstripe border-b border-mac-border flex items-center justify-center relative select-none shrink-0">
       <!-- Left: close box -->
-      <button class="mac9-titlebar-btn" style="left: 6px;" type="button">
-        <span style="font-size:7px; line-height:1;">✕</span>
+      <button class="absolute left-1.5 size-3.5 bg-mac-btn-face border border-mac-btn-border flex items-center justify-center text-[10px] leading-none active:bg-[#aaa]" type="button">
+        <span class="text-[9px] leading-none">✕</span>
       </button>
       <!-- Centre: title -->
-      <span>{title}</span>
+      <span class="text-sm font-bold text-black leading-none">{title}</span>
       <!-- Right: shade + zoom -->
-      <div style="position:absolute; right:6px; display:flex; gap:3px;">
+      <div class="absolute right-1.5 flex gap-[3px]">
         <button
-          class="mac9-titlebar-btn"
-          style="position:static;"
+          class="size-3.5 bg-mac-btn-face border border-mac-btn-border flex items-center justify-center text-[10px] leading-none active:bg-[#aaa]"
           type="button"
         >
-          <span style="font-size:7px; line-height:1;">+</span>
+          <span class="text-[9px] leading-none">+</span>
         </button>
         <button
-          class="mac9-titlebar-btn"
-          style="position:static;"
+          class="size-3.5 bg-mac-btn-face border border-mac-btn-border flex items-center justify-center text-[10px] leading-none active:bg-[#aaa]"
           type="button"
         >
-          <span style="font-size:7px; line-height:1;">–</span>
+          <span class="text-[9px] leading-none">–</span>
         </button>
       </div>
     </div>

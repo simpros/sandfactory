@@ -1,16 +1,17 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { resolve } from "$app/paths";
-  import { PageFrame } from "@sandfactory/ui";
   import { saveSetup } from "./setup.remote";
 
   const setupForm = saveSetup;
   let apiToken = $state("");
+  let wizardStep = $state<"introduction" | "configuration" | "complete">("introduction");
 
   const baseUrlField = setupForm.fields.baseUrl.as("text");
+  const loginPasswordField = setupForm.fields.loginPassword.as("password");
   const repoRootField = setupForm.fields.repoRoot.as("text");
 
-  function issueFor(name: "baseUrl" | "repoRoot") {
+  function issueFor(name: "baseUrl" | "loginPassword" | "repoRoot") {
     const message = setupForm.fields[name].issues()?.[0]?.message;
     return typeof message === "string" ? message : message ? String(message) : undefined;
   }
@@ -24,77 +25,83 @@
     const success = await submit();
     if (success && setupForm.result?.apiToken) {
       apiToken = setupForm.result.apiToken;
+      wizardStep = "complete";
     }
   });
 
+  function continueToConfiguration() {
+    wizardStep = "configuration";
+  }
+
   async function continueToDashboard() {
-    await goto(resolve("/"));
+    await goto(resolve("/login"));
   }
 
   const steps = ["Introduction", "Configuration", "Complete"];
-  const currentStep = $derived(apiToken ? 2 : 1);
+  const currentStep = $derived(
+    wizardStep === "introduction" ? 0 : wizardStep === "configuration" ? 1 : 2,
+  );
 </script>
 
 <svelte:head>
   <title>Setup | Sandfactory</title>
 </svelte:head>
 
-<PageFrame>
-  <div class="flex min-h-[calc(100vh-20px)] items-center justify-center p-8">
-    <!-- Setup assistant window -->
-    <div class="mac9-window w-full max-w-[520px]">
+<div class="flex min-h-[calc(100vh-24px)] items-center justify-center p-8">
+  <!-- Setup assistant window -->
+  <div class="bg-mac-window border border-mac-border shadow-mac-window w-full max-w-[520px]">
 
       <!-- Pinstripe title bar -->
-      <div class="mac9-titlebar">
-        <button class="mac9-titlebar-btn" style="left: 6px;" type="button">
-          <span style="font-size:7px;">✕</span>
+      <div class="h-6 mac-pinstripe border-b border-mac-border flex items-center justify-center relative select-none shrink-0">
+        <button class="absolute left-1.5 size-3.5 bg-mac-btn-face border border-mac-btn-border flex items-center justify-center text-[10px] leading-none active:bg-[#aaa]" type="button">
+          <span class="text-[9px]">✕</span>
         </button>
-        <span>Sandfactory Setup Assistant</span>
-        <div style="position:absolute; right:6px; display:flex; gap:3px;">
-          <button class="mac9-titlebar-btn" style="position:static;" type="button">
-            <span style="font-size:7px;">+</span>
+        <span class="text-sm font-bold text-black leading-none">Sandfactory Setup Assistant</span>
+        <div class="absolute right-1.5 flex gap-[3px]">
+          <button class="size-3.5 bg-mac-btn-face border border-mac-btn-border flex items-center justify-center text-[10px] leading-none active:bg-[#aaa]" type="button">
+            <span class="text-[9px]">+</span>
           </button>
-          <button class="mac9-titlebar-btn" style="position:static;" type="button">
-            <span style="font-size:7px;">–</span>
+          <button class="size-3.5 bg-mac-btn-face border border-mac-btn-border flex items-center justify-center text-[10px] leading-none active:bg-[#aaa]" type="button">
+            <span class="text-[9px]">–</span>
           </button>
         </div>
       </div>
 
       <!-- Two-panel body -->
       <form id="sf-setup" {...enhancedSetupForm}>
-        <div class="flex" style="min-height: 360px;">
+        <div class="flex min-h-[360px]">
 
           <!-- Left: Platinum sidebar with steps -->
           <div
-            class="flex w-[152px] shrink-0 flex-col justify-between"
-            style="background: #c8c8c8; border-right: 1px solid #aaaaaa; box-shadow: inset -1px 0 0 #ffffff; padding: 16px 12px;"
+            class="flex w-[160px] shrink-0 flex-col justify-between bg-mac-sidebar border-r border-mac-border-light shadow-[inset_-1px_0_0_#fff] p-3"
           >
             <!-- Logo area -->
             <div>
               <div
-                class="mb-3 flex h-16 w-16 items-center justify-center"
-                style="background: linear-gradient(135deg, #6688cc 0%, #3355aa 100%); border: 1px solid #aaaaaa;"
+                class="mb-3 flex h-16 w-16 items-center justify-center bg-gradient-to-br from-[#6688cc] to-[#3355aa] border border-mac-border-light"
               >
-                <span style="font-size: 30px; line-height: 1;">🏭</span>
+                <span class="text-[30px] leading-none">🏭</span>
               </div>
-              <p class="text-[13px] font-bold leading-tight text-black">Sandfactory</p>
-              <p class="text-[10px] text-[#555]">v0.1.0</p>
+              <p class="text-[15px] font-bold leading-tight text-black">Sandfactory</p>
+              <p class="text-xs text-[#555]">v0.1.0</p>
             </div>
 
             <!-- Step list -->
-            <div style="margin-bottom: 8px;">
-              <hr class="mac9-hr" style="margin-bottom: 10px;">
+            <div class="mb-2">
+              <hr class="border-none border-t border-mac-border-light shadow-[0_1px_0_#fff] mb-2.5">
               {#each steps as step, i (step)}
                 <div
-                  class="flex items-center gap-2 py-1 text-[11px]"
-                  style={i === currentStep ? "font-weight: bold; color: #000;" : "color: #666;"}
+                  class={[
+                    "flex items-center gap-2 py-1 text-[13px]",
+                    i === currentStep ? "font-bold text-black" : "text-mac-muted",
+                  ]}
                 >
                   {#if i < currentStep}
-                    <span style="color: #338833; font-size: 10px;">✔</span>
+                    <span class="text-[#383] text-xs">✔</span>
                   {:else if i === currentStep}
-                    <span style="color: #2255cc; font-size: 10px;">▶</span>
+                    <span class="text-mac-highlight text-xs">▶</span>
                   {:else}
-                    <span style="color: #aaaaaa; font-size: 10px;">○</span>
+                    <span class="text-mac-border-light text-xs">○</span>
                   {/if}
                   <span>{step}</span>
                 </div>
@@ -104,85 +111,117 @@
 
           <!-- Right: white content area -->
           <div class="flex flex-1 flex-col bg-white p-5">
-            {#if apiToken}
+            {#if wizardStep === "complete"}
               <!-- Success state -->
-              <h2 class="mb-1 text-[14px] font-bold text-black">Setup Complete</h2>
-              <hr class="mac9-hr mb-3">
-              <p class="mb-4 text-[12px] leading-relaxed text-black">
+              <h2 class="mb-1 text-base font-bold text-black">Setup Complete</h2>
+              <hr class="border-none border-t border-mac-border-light shadow-[0_1px_0_#fff] mb-3">
+              <p class="mb-4 text-sm leading-relaxed text-black">
                 Sandfactory has been configured successfully. Your API token has been generated.
                 <strong>This is the only time the raw value will be shown.</strong>
               </p>
 
-              <p class="mb-1 text-[12px] font-bold text-black">API Token</p>
+              <p class="mb-1 text-sm font-bold text-black">API Token</p>
               <div
-                class="mb-4 w-full bg-white px-2 py-2"
-                style="border: 1px solid #aaaaaa; box-shadow: inset 1px 1px 3px rgba(0,0,0,0.12);"
+                class="mb-4 w-full bg-white px-2 py-2 border border-mac-border-light shadow-[inset_1px_1px_3px_rgba(0,0,0,0.12)]"
               >
-                <code class="break-all text-[11px] text-black" style="font-family: Monaco, 'Courier New', monospace; user-select: text; cursor: text;">
+                <code class="break-all text-[13px] text-black font-mono select-text cursor-text">
                   {apiToken}
                 </code>
               </div>
 
               <!-- Yellow warning note -->
               <div
-                class="flex gap-2 px-3 py-2 text-[11px] text-black"
-                style="background: #ffffcc; border: 1px solid #ccaa00;"
+                class="flex gap-2 px-3 py-2 text-[13px] text-black bg-[#ffc] border border-[#ca0]"
               >
                 <span>⚠</span>
                 <span>Copy this token to GitHub Actions → Settings → Secrets. It cannot be retrieved again.</span>
               </div>
-            {:else}
+            {:else if wizardStep === "configuration"}
               <!-- Form state -->
-              <h2 class="mb-1 text-[14px] font-bold text-black">Server Configuration</h2>
-              <hr class="mac9-hr mb-3">
-              <p class="mb-5 text-[12px] leading-relaxed text-black">
+              <h2 class="mb-1 text-base font-bold text-black">Server Configuration</h2>
+              <hr class="border-none border-t border-mac-border-light shadow-[0_1px_0_#fff] mb-3">
+              <p class="mb-5 text-sm leading-relaxed text-black">
                 Enter the public URL of this server and the path where remote repositories
                 will be cloned. These settings are required before your first agent run.
               </p>
 
               <div class="flex flex-col gap-4">
                 <div>
-                  <label class="mb-1 block text-[12px] font-bold text-black" for="base-url">
+                  <label class="mb-1 block text-sm font-bold text-black" for="base-url">
                     Base URL:
                   </label>
                   <input
                     id="base-url"
                     bind:value={baseUrlField.value}
-                    class="mac9-field w-full"
+                    class="h-7 w-full px-2 bg-white border border-mac-border-dark text-sm text-black outline-none rounded-none focus:border-mac-highlight focus:shadow-mac-focus"
                     name={baseUrlField.name}
                     placeholder="https://sandfactory.example.com"
                     type="url"
                   />
                   {#if issueFor("baseUrl")}
-                    <p class="mt-1 text-[11px] text-red-700">⚠ {issueFor("baseUrl")}</p>
+                    <p class="mt-1 text-[13px] text-red-700">⚠ {issueFor("baseUrl")}</p>
                   {/if}
                 </div>
 
                 <div>
-                  <label class="mb-1 block text-[12px] font-bold text-black" for="repo-root">
+                  <label class="mb-1 block text-sm font-bold text-black" for="login-password">
+                    Login Password:
+                  </label>
+                  <input
+                    id="login-password"
+                    bind:value={loginPasswordField.value}
+                    class="h-7 w-full px-2 bg-white border border-mac-border-dark text-sm text-black outline-none rounded-none focus:border-mac-highlight focus:shadow-mac-focus"
+                    name={loginPasswordField.name}
+                    placeholder="Choose a password"
+                    type="password"
+                  />
+                  {#if issueFor("loginPassword")}
+                    <p class="mt-1 text-[13px] text-red-700">⚠ {issueFor("loginPassword")}</p>
+                  {/if}
+                </div>
+
+                <div>
+                  <label class="mb-1 block text-sm font-bold text-black" for="repo-root">
                     Repository Root:
                   </label>
                   <input
                     id="repo-root"
                     bind:value={repoRootField.value}
-                    class="mac9-field w-full"
+                    class="h-7 w-full px-2 bg-white border border-mac-border-dark text-sm text-black outline-none rounded-none focus:border-mac-highlight focus:shadow-mac-focus"
                     name={repoRootField.name}
                     placeholder="/srv/projects"
                     type="text"
                   />
                   {#if issueFor("repoRoot")}
-                    <p class="mt-1 text-[11px] text-red-700">⚠ {issueFor("repoRoot")}</p>
+                    <p class="mt-1 text-[13px] text-red-700">⚠ {issueFor("repoRoot")}</p>
                   {/if}
                 </div>
 
                 {#if formIssue()}
                   <div
-                    class="px-3 py-2 text-[11px] text-red-700"
-                    style="background: #fff0f0; border: 1px solid #cc4444;"
+                    class="px-3 py-2 text-[13px] text-red-700 bg-[#fff0f0] border border-[#c44]"
                   >
                     ⚠ {formIssue()}
                   </div>
                 {/if}
+              </div>
+            {:else}
+              <h2 class="mb-1 text-base font-bold text-black">Welcome to Sandfactory</h2>
+              <hr class="border-none border-t border-mac-border-light shadow-[0_1px_0_#fff] mb-3">
+              <div class="space-y-3 text-sm leading-relaxed text-black">
+                <p>
+                  This assistant will configure the Sandfactory dev-server for a single-user MVP.
+                </p>
+                <p>
+                  In the next step you will set the public base URL, choose the repo root where
+                  Projects are cloned, and create the password that protects the Sandfactory UI.
+                </p>
+                <div
+                  class="px-3 py-2 bg-[#f3f3f3] border border-[#ccc]"
+                >
+                  The setup flow will also generate the CLI API token once. Save it before you
+                  finish because the raw value will not be shown again.
+                </div>
               </div>
             {/if}
           </div>
@@ -190,25 +229,33 @@
 
         <!-- Full-width button strip -->
         <div
-          class="flex items-center justify-between px-4 py-2"
-          style="background: #ececec; border-top: 1px solid #aaaaaa; box-shadow: inset 0 1px 0 #ffffff;"
+          class="flex items-center justify-between px-4 py-2 bg-mac-window border-t border-mac-border-light shadow-[inset_0_1px_0_#fff]"
         >
-          <span class="text-[11px] text-[#666]">
+          <span class="text-[13px] text-mac-muted">
             Step {currentStep + 1} of {steps.length}
           </span>
           <div class="flex gap-2">
-            {#if apiToken}
+            {#if wizardStep === "complete"}
               <button
-                class="mac9-btn mac9-btn-primary"
+                class="inline-flex items-center justify-center min-w-20 h-7 px-4 mac-btn-gradient border-2 border-[#222] rounded-[5px] text-sm font-bold text-black cursor-default select-none whitespace-nowrap active:enabled:mac-btn-primary-gradient-active"
                 onclick={continueToDashboard}
                 type="button"
               >
                 Finish
               </button>
-            {:else}
-              <button class="mac9-btn" type="button">Cancel</button>
+            {:else if wizardStep === "introduction"}
+              <button class="inline-flex items-center justify-center min-w-20 h-7 px-4 mac-btn-gradient border border-mac-border-dark rounded text-sm text-black cursor-default select-none whitespace-nowrap active:mac-btn-gradient-active" type="button">Cancel</button>
               <button
-                class="mac9-btn mac9-btn-primary"
+                class="inline-flex items-center justify-center min-w-20 h-7 px-4 mac-btn-gradient border-2 border-[#222] rounded-[5px] text-sm font-bold text-black cursor-default select-none whitespace-nowrap active:enabled:mac-btn-primary-gradient-active"
+                onclick={continueToConfiguration}
+                type="button"
+              >
+                Continue →
+              </button>
+            {:else}
+              <button class="inline-flex items-center justify-center min-w-20 h-7 px-4 mac-btn-gradient border border-mac-border-dark rounded text-sm text-black cursor-default select-none whitespace-nowrap active:mac-btn-gradient-active" type="button">Cancel</button>
+              <button
+                class="inline-flex items-center justify-center min-w-20 h-7 px-4 mac-btn-gradient border-2 border-[#222] rounded-[5px] text-sm font-bold text-black cursor-default select-none whitespace-nowrap active:enabled:mac-btn-primary-gradient-active disabled:text-mac-border-dark"
                 disabled={setupForm.pending > 0}
                 type="submit"
               >
@@ -218,6 +265,5 @@
           </div>
         </div>
       </form>
-    </div>
   </div>
-</PageFrame>
+</div>
