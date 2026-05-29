@@ -7,3 +7,11 @@ export const settings = sqliteTable("settings", {
   value: text("value").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
+
+export const projects = sqliteTable("projects", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  remoteUrl: text("remote_url"),
+  localPath: text("local_path").notNull().unique(),
+  createdAt: text("created_at").notNull(),
+});
