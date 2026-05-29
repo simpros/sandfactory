@@ -1,77 +1,9 @@
 <script lang="ts">
-  import { resolve } from "$app/paths";
-
-  import {
-    listRegisteredProjects,
-    registerRemoteProject,
-  } from "./projects.remote";
-
   let { data } = $props();
-
-  const projectsQuery = listRegisteredProjects();
-  const registerForm = registerRemoteProject;
-
-  const remoteUrlField = registerForm.fields.remoteUrl.as("text");
-
-  let formError = $state<string | null>(null);
-  let conflict = $state<{
-    reason: "directory-exists" | "already-registered";
-    name: string;
-    localPath: string;
-    remoteUrl: string;
-  } | null>(null);
-
-  function fieldIssue() {
-    const message = registerForm.fields.remoteUrl.issues()?.[0]?.message;
-    return typeof message === "string"
-      ? message
-      : message
-        ? String(message)
-        : undefined;
-  }
-
-  const enhancedRegisterForm: ReturnType<typeof registerForm.enhance> =
-    registerForm.enhance(async ({ submit, form }) => {
-      formError = null;
-      const success = await submit();
-      if (!success) return;
-      const result = registerForm.result as
-        | { ok: true; project: unknown }
-        | { ok: false; conflict: false; error: string }
-        | {
-            ok: false;
-            conflict: true;
-            reason: "directory-exists" | "already-registered";
-            name: string;
-            localPath: string;
-            remoteUrl: string;
-          }
-        | undefined;
-      if (result && result.ok === false) {
-        if (result.conflict) {
-          conflict = {
-            reason: result.reason,
-            name: result.name,
-            localPath: result.localPath,
-            remoteUrl: result.remoteUrl,
-          };
-          return;
-        }
-        formError = result.error;
-        return;
-      }
-      conflict = null;
-      form.reset();
-    });
-
-  function cancelConflict() {
-    conflict = null;
-    formError = null;
-  }
 
   const navItems = [
     { icon: "🏠", label: "Dashboard", active: true, path: "/" },
-    { icon: "📁", label: "Projects", active: false, path: null },
+    { icon: "📁", label: "Projects", active: false, path: "/projects" },
     {
       icon: "⚙",
       label: "Settings",
@@ -192,7 +124,7 @@
                 ? "bg-mac-highlight text-white"
                 : "hover:bg-mac-highlight bg-transparent text-black hover:text-white",
             ]}
-            href={item.path ? resolve(item.path) : undefined}
+            href={item.path ?? undefined}
             type="button"
           >
             <span class="text-base leading-none">{item.icon}</span>
@@ -256,136 +188,6 @@
               <span class="text-mac-border-light">○</span>
               <span class="text-mac-muted">No active agent runs</span>
             </div>
-          </div>
-        </fieldset>
-
-        <!-- Projects groupbox -->
-        <fieldset
-          class="border-mac-border-light shadow-mac-etched bg-mac-window mb-2.5 border px-2.5 pt-4 pb-2.5"
-        >
-          <legend
-            class="bg-mac-window px-1 text-[13px] font-bold text-black"
-            >Projects</legend
-          >
-
-          <form
-            id="sf-register-project"
-            class="mb-3 flex flex-col gap-2"
-            {...enhancedRegisterForm}
-          >
-            {#if conflict}
-              <input
-                name="remoteUrl"
-                type="hidden"
-                value={conflict.remoteUrl}
-              />
-              <input name="overwrite" type="hidden" value="true" />
-              <div
-                class="border border-[#c80] bg-[#fff8e0] px-2 py-1.5 text-[13px] text-black"
-                data-testid="register-conflict"
-              >
-                <p class="mb-1 font-bold">
-                  ⚠ A project named <span class="font-mono"
-                    >{conflict.name}</span
-                  > is already present.
-                </p>
-                <p class="text-mac-muted mb-2 text-[12px]">
-                  {conflict.reason === "already-registered"
-                    ? "It is already registered in Sandfactory."
-                    : `A directory exists at ${conflict.localPath}.`}
-                </p>
-                <p class="mb-2">
-                  Overwrite it with a fresh clone from <span
-                    class="font-mono">{conflict.remoteUrl}</span
-                  >?
-                </p>
-                <div class="flex gap-2">
-                  <button
-                    class="mac-btn-gradient border-mac-border-dark active:mac-btn-gradient-active inline-flex h-7 cursor-default items-center justify-center rounded border px-3 text-sm font-bold whitespace-nowrap text-black select-none disabled:text-[#999]"
-                    disabled={registerForm.pending > 0}
-                    type="submit"
-                    data-testid="confirm-overwrite"
-                  >
-                    {registerForm.pending > 0
-                      ? "Overwriting…"
-                      : "Overwrite"}
-                  </button>
-                  <button
-                    class="mac-btn-gradient border-mac-border-dark active:mac-btn-gradient-active inline-flex h-7 cursor-default items-center justify-center rounded border px-3 text-sm whitespace-nowrap text-black select-none"
-                    disabled={registerForm.pending > 0}
-                    type="button"
-                    onclick={cancelConflict}
-                    data-testid="cancel-overwrite"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            {:else}
-              <label class="text-sm font-bold text-[#333]" for="remote-url"
-                >Remote Git URL:</label
-              >
-              <div class="flex items-stretch gap-2">
-                <input
-                  id="remote-url"
-                  class="border-mac-border-light h-7 flex-1 border bg-white px-1.5 text-sm text-black shadow-[inset_1px_1px_2px_rgba(0,0,0,0.08)]"
-                  placeholder="git@github.com:owner/repo.git"
-                  {...remoteUrlField}
-                />
-                <button
-                  class="mac-btn-gradient border-mac-border-dark active:mac-btn-gradient-active inline-flex h-7 cursor-default items-center justify-center rounded border px-3 text-sm font-bold whitespace-nowrap text-black select-none disabled:text-[#999]"
-                  disabled={registerForm.pending > 0}
-                  type="submit"
-                >
-                  {registerForm.pending > 0 ? "Cloning…" : "Register"}
-                </button>
-              </div>
-              {#if fieldIssue()}
-                <p class="text-[13px] text-red-700">⚠ {fieldIssue()}</p>
-              {/if}
-              {#if formError}
-                <div
-                  class="border border-[#c44] bg-[#fff0f0] px-2 py-1.5 text-[13px] text-red-700"
-                  data-testid="register-error"
-                >
-                  ⚠ {formError}
-                </div>
-              {/if}
-            {/if}
-          </form>
-
-          <div class="space-y-1.5 text-sm" data-testid="project-list">
-            {#await projectsQuery}
-              <span class="text-mac-muted">Loading projects…</span>
-            {:then projectList}
-              {#if projectList.length === 0}
-                <div class="flex items-center gap-2">
-                  <span class="text-mac-border-light">○</span>
-                  <span class="text-mac-muted">No registered projects</span
-                  >
-                </div>
-              {:else}
-                {#each projectList as project (project.id)}
-                  <div
-                    class="flex items-center justify-between gap-2"
-                    data-testid="project-row"
-                  >
-                    <div class="flex items-center gap-2">
-                      <span class="text-[#383]">●</span>
-                      <span class="font-bold text-black"
-                        >{project.name}</span
-                      >
-                    </div>
-                    <span
-                      class="text-mac-muted truncate text-xs"
-                      title={project.localPath}
-                    >
-                      {project.localPath}
-                    </span>
-                  </div>
-                {/each}
-              {/if}
-            {/await}
           </div>
         </fieldset>
 

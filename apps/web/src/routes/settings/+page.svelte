@@ -1,6 +1,5 @@
 <script lang="ts">
   import { regenerateApiToken } from "../setup/setup.remote";
-  import { resolve } from "$app/paths";
 
   let { data } = $props();
 
@@ -15,7 +14,7 @@
       active: false,
       path: "/",
     },
-    { icon: "📁", label: "Projects", active: false, path: null },
+    { icon: "📁", label: "Projects", active: false, path: "/projects" },
     {
       icon: "⚙",
       label: "Settings",
@@ -120,7 +119,7 @@
                   ? "bg-mac-highlight text-white"
                   : "bg-transparent text-black hover:bg-mac-highlight hover:text-white",
               ]}
-              href={item.path ? resolve(item.path) : undefined}
+              href={item.path ?? undefined}
               type="button"
             >
               <span class="text-base leading-none">{item.icon}</span>
