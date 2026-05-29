@@ -120,7 +120,7 @@
                   ? "bg-mac-highlight text-white"
                   : "bg-transparent text-black hover:bg-mac-highlight hover:text-white",
               ]}
-              href={item.path ? resolve(item.path as Parameters<typeof resolve>[0]) : undefined}
+              href={item.path ? resolve(item.path) : undefined}
               type="button"
             >
               <span class="text-base leading-none">{item.icon}</span>

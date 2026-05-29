@@ -76,7 +76,7 @@
       path: "/settings",
     },
     { icon: "🗝", label: "API Tokens", active: false, path: null },
-  ];
+  ] as const;
 </script>
 
 <svelte:head>
@@ -186,7 +186,7 @@
                 ? "bg-mac-highlight text-white"
                 : "hover:bg-mac-highlight bg-transparent text-black hover:text-white",
             ]}
-            href={item.path ? resolve(item.path as Parameters<typeof resolve>[0]) : undefined}
+            href={item.path ? resolve(item.path) : undefined}
             type="button"
           >
             <span class="text-base leading-none">{item.icon}</span>
