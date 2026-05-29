@@ -15,7 +15,7 @@
       active: false,
       path: "/",
     },
-    { icon: "📁", label: "Projects", active: false, path: null },
+    { icon: "📁", label: "Projects", active: false, path: "/projects" },
     {
       icon: "⚙",
       label: "Settings",

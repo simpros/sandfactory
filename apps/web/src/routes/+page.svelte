@@ -1,11 +1,10 @@
 <script lang="ts">
   import { resolve } from "$app/paths";
-
   let { data } = $props();
 
   const navItems = [
     { icon: "🏠", label: "Dashboard", active: true, path: "/" },
-    { icon: "📁", label: "Projects", active: false, path: null },
+    { icon: "📁", label: "Projects", active: false, path: "/projects" },
     {
       icon: "⚙",
       label: "Settings",
@@ -190,10 +189,6 @@
               <span class="text-mac-border-light">○</span>
               <span class="text-mac-muted">No active agent runs</span>
             </div>
-            <div class="flex items-center gap-2">
-              <span class="text-mac-border-light">○</span>
-              <span class="text-mac-muted">No registered projects</span>
-            </div>
           </div>
         </fieldset>
 
@@ -206,7 +201,7 @@
             >Planned Features</legend
           >
           <div class="space-y-1 text-sm">
-            {#each ["Project registration", "Agent run queue", "Preview environment lifecycle", "Cleanup automation via GitHub Actions"] as feat (feat)}
+            {#each ["Agent run queue", "Preview environment lifecycle", "Cleanup automation via GitHub Actions"] as feat (feat)}
               <div class="text-mac-muted flex items-center gap-2">
                 <input class="m-0" disabled type="checkbox" />
                 <span>{feat}</span>
