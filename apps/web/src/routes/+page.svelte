@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from "$app/paths";
   let { data } = $props();
 
   const navItems = [
@@ -124,7 +125,7 @@
                 ? "bg-mac-highlight text-white"
                 : "hover:bg-mac-highlight bg-transparent text-black hover:text-white",
             ]}
-            href={item.path ?? undefined}
+            href={item.path ? resolve(item.path as Parameters<typeof resolve>[0]) : undefined}
             type="button"
           >
             <span class="text-base leading-none">{item.icon}</span>
