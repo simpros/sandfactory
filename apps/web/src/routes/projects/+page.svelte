@@ -5,7 +5,6 @@
     registerRemoteProject,
   } from "../projects.remote";
 
-  const projectsQuery = listRegisteredProjects();
   const registerForm = registerRemoteProject;
 
   const remoteUrlField = registerForm.fields.remoteUrl.as("text");
@@ -97,7 +96,9 @@
       >
         <span class="text-[9px]">✕</span>
       </button>
-      <span class="text-sm leading-none font-bold text-black">Sandfactory</span>
+      <span class="text-sm leading-none font-bold text-black"
+        >Sandfactory</span
+      >
       <div class="absolute right-1.5 flex gap-[3px]">
         <button
           class="bg-mac-btn-face border-mac-btn-border flex size-3.5 items-center justify-center border text-[10px] leading-none active:bg-[#aaa]"
@@ -206,7 +207,8 @@
         <fieldset
           class="border-mac-border-light shadow-mac-etched bg-mac-window mb-2.5 border px-2.5 pt-4 pb-2.5"
         >
-          <legend class="bg-mac-window px-1 text-[13px] font-bold text-black"
+          <legend
+            class="bg-mac-window px-1 text-[13px] font-bold text-black"
             >Register Project</legend
           >
 
@@ -248,7 +250,9 @@
                     type="submit"
                     data-testid="confirm-overwrite"
                   >
-                    {registerForm.pending > 0 ? "Overwriting…" : "Overwrite"}
+                    {registerForm.pending > 0
+                      ? "Overwriting…"
+                      : "Overwrite"}
                   </button>
                   <button
                     class="mac-btn-gradient border-mac-border-dark active:mac-btn-gradient-active inline-flex h-7 cursor-default items-center justify-center rounded border px-3 text-sm whitespace-nowrap text-black select-none"
@@ -299,27 +303,25 @@
         <fieldset
           class="border-mac-border-light shadow-mac-etched bg-mac-window border px-2.5 pt-4 pb-2.5"
         >
-          <legend class="bg-mac-window px-1 text-[13px] font-bold text-black"
+          <legend
+            class="bg-mac-window px-1 text-[13px] font-bold text-black"
             >Registered Projects</legend
           >
           <div class="space-y-1.5 text-sm" data-testid="project-list">
-            {#await projectsQuery}
-              <span class="text-mac-muted">Loading projects…</span>
-            {:then projectList}
-              {#if projectList.length === 0}
-                <div class="flex items-center gap-2">
-                  <span class="text-mac-border-light">○</span>
-                  <span class="text-mac-muted">No registered projects</span>
-                </div>
-              {:else}
-                {#each projectList as project (project.id)}
+            <svelte:boundary>
+              {#each await listRegisteredProjects() as project (project.id)}
+                <div
+                  class="border-mac-border-light mb-2 border bg-white"
+                  data-testid="project-row"
+                >
                   <div
-                    class="flex items-center justify-between gap-2"
-                    data-testid="project-row"
+                    class="flex items-center justify-between gap-2 px-2 py-1.5"
                   >
                     <div class="flex items-center gap-2">
                       <span class="text-[#383]">●</span>
-                      <span class="font-bold text-black">{project.name}</span>
+                      <span class="font-bold text-black"
+                        >{project.name}</span
+                      >
                     </div>
                     <span
                       class="text-mac-muted truncate text-xs"
@@ -328,9 +330,72 @@
                       {project.localPath}
                     </span>
                   </div>
-                {/each}
-              {/if}
-            {/await}
+                  {#if project.config.ok}
+                    <div
+                      class="border-t border-[#eee] px-2 py-1.5 text-[12px]"
+                      data-testid="project-config-summary"
+                    >
+                      <p class="mb-1 font-bold text-[#333]">
+                        Project Config
+                      </p>
+                      <p class="text-[#555]">
+                        <span class="font-semibold">Apps:</span>
+                        {project.config.config.apps
+                          .map((a) => `${a.dockerfile_path}:${a.port}`)
+                          .join(", ")}
+                      </p>
+                      {#if project.config.config.services.length > 0}
+                        <p class="text-[#555]">
+                          <span class="font-semibold">Services:</span>
+                          {project.config.config.services
+                            .map(
+                              (s) =>
+                                `${s.inject_as} (${s.mode}, ${s.data})`
+                            )
+                            .join(", ")}
+                        </p>
+                      {/if}
+                      <p class="text-[#555]">
+                        <span class="font-semibold">Auto-deploy:</span>
+                        {project.config.config.auto_deploy
+                          ? "enabled"
+                          : "disabled"}
+                      </p>
+                    </div>
+                  {:else if project.config.missing}
+                    <p
+                      class="border-t border-[#eee] px-2 py-1 text-[12px] text-[#888]"
+                      data-testid="project-config-missing"
+                    >
+                      No <span class="font-mono"
+                        >.sandcastle/config.yaml</span
+                      > found.
+                    </p>
+                  {:else}
+                    <div
+                      class="border-t border-[#eee] px-2 py-1.5 text-[12px] text-red-700"
+                      data-testid="project-config-errors"
+                    >
+                      <p class="mb-0.5 font-bold">Config errors:</p>
+                      <ul class="list-disc pl-4">
+                        {#each project.config.errors as configError (configError)}
+                          <li>{configError}</li>
+                        {/each}
+                      </ul>
+                    </div>
+                  {/if}
+                </div>
+              {:else}
+                <div class="flex items-center gap-2">
+                  <span class="text-mac-border-light">○</span>
+                  <span class="text-mac-muted">No registered projects</span
+                  >
+                </div>
+              {/each}
+              {#snippet pending()}
+                <span class="text-mac-muted">Loading projects…</span>
+              {/snippet}
+            </svelte:boundary>
           </div>
         </fieldset>
       </div>

@@ -3,25 +3,27 @@ import { mkdir } from "node:fs/promises";
 import { form, getRequestEvent, query } from "$app/server";
 import * as v from "valibot";
 
+import { readProjectConfig, type ReadResult } from "$lib/server/project-config";
 import { readSetupStatus } from "$lib/server/setup";
 import {
   listProjects,
   registerProjectFromRemoteUrl,
   type CloneFn,
+  type Project,
 } from "$lib/server/projects";
 
 const registerSchema = v.object({
   remoteUrl: v.pipe(
     v.string(),
     v.trim(),
-    v.minLength(1, "Enter a Git URL."),
+    v.minLength(1, "Enter a Git URL.")
   ),
   overwrite: v.optional(
     v.pipe(
       v.string(),
-      v.transform((value) => value === "true" || value === "on"),
+      v.transform((value) => value === "true" || value === "on")
     ),
-    "false",
+    "false"
   ),
 });
 
@@ -43,7 +45,9 @@ async function realGitClone({
   ]);
 
   if (exitCode !== 0) {
-    throw new Error(stderr.trim() || `git clone exited with code ${exitCode}`);
+    throw new Error(
+      stderr.trim() || `git clone exited with code ${exitCode}`
+    );
   }
 }
 
@@ -61,9 +65,16 @@ function selectCloner(): CloneFn {
   return realGitClone;
 }
 
-export const listRegisteredProjects = query(() => {
+export type ProjectWithConfig = Project & { config: ReadResult };
+
+export const listRegisteredProjects = query(async (): Promise<ProjectWithConfig[]> => {
   const { db } = getRequestEvent().locals;
-  return listProjects(db);
+  return Promise.all(
+    listProjects(db).map(async (project) => ({
+      ...project,
+      config: await readProjectConfig(project.localPath),
+    }))
+  );
 });
 
 export const registerRemoteProject = form(
@@ -73,7 +84,10 @@ export const registerRemoteProject = form(
     const status = readSetupStatus(db);
 
     if (!status.settings) {
-      return { ok: false as const, error: "Sandfactory is not configured." };
+      return {
+        ok: false as const,
+        error: "Sandfactory is not configured.",
+      };
     }
 
     const result = await registerProjectFromRemoteUrl({
@@ -104,5 +118,5 @@ export const registerRemoteProject = form(
 
     await listRegisteredProjects().refresh();
     return { ok: true as const, project: result.project };
-  },
+  }
 );
