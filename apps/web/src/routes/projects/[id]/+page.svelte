@@ -2,10 +2,10 @@
   import { resolve } from "$app/paths";
 
   import { getProjectDetail } from "./project-detail.remote";
-  import AgentRunPanel from "./AgentRunPanel.svelte";
-  import GenerateConfigPanel from "./GenerateConfigPanel.svelte";
-  import ProjectHeader from "./ProjectHeader.svelte";
-  import RunHistoryPanel from "./RunHistoryPanel.svelte";
+  import AgentRunPanel from "./agent-run-panel.svelte";
+  import GenerateConfigPanel from "./generate-config-panel.svelte";
+  import ProjectHeader from "./project-header.svelte";
+  import RunHistoryPanel from "./run-history-panel.svelte";
   import type { AgentRun } from "$lib/server/agent-runs";
 
   let { params } = $props();
