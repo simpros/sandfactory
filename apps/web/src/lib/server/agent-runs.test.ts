@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { createDb } from "@sandfactory/db";
+import { createDb, projects } from "@sandfactory/db";
 
 import { listAgentRuns, startAgentRun, type ExecuteFn } from "./agent-runs";
 
@@ -30,7 +30,6 @@ function setupHarness() {
 }
 
 function insertTestProject(db: ReturnType<typeof setupHarness>["db"]) {
-  const { projects } = require("@sandfactory/db");
   const project = {
     id: "proj-1",
     name: "test-project",

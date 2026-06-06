@@ -324,7 +324,7 @@
                       <span class="text-[#383]">●</span>
                       <a
                         class="font-bold text-black hover:underline"
-                        href="/projects/{project.id}"
+                        href={resolve(`/projects/${project.id}`)}
                         >{project.name}</a
                       >
                     </div>
