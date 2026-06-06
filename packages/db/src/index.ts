@@ -4,7 +4,7 @@ import { dirname, resolve } from "node:path";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { migrate } from "drizzle-orm/bun-sqlite/migrator";
 
-import * as schema from "./schema";
+import * as dbSchema from "./schema";
 
 function resolveRepoRoot() {
   for (const startPath of [process.cwd(), import.meta.dirname]) {
@@ -56,9 +56,10 @@ export function createDb(
   const sqlite = new Database(databaseFilePath);
   sqlite.run("PRAGMA journal_mode = WAL;");
 
-  const db = drizzle({
+  const db = drizzle<typeof dbSchema.schema, typeof dbSchema.relations>({
     client: sqlite,
-    schema,
+    schema: dbSchema.schema,
+    relations: dbSchema.relations,
   });
 
   if (!migratedDbs.has(databaseFilePath)) {
@@ -78,5 +79,5 @@ export function createDb(
 
 export type Db = ReturnType<typeof createDb>;
 
-export { schema };
+export { dbSchema as schema };
 export * from "./schema";

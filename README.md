@@ -46,3 +46,6 @@ bun run test
 - `bun.lock` is committed for reproducible template installs.
 - CI runs lint, type checks, and build on pull requests and `main`.
 - Repo-local agent skills are included under `.agents/skills` so downstream repos keep the same Svelte guidance.
+- Source filenames should use lower-kebab-case.
+- Allowed framework/tooling suffixes may be appended after the kebab-case base name, for example: `project-config.test.ts`, `project-detail.remote.ts`, `hooks.server.ts`, `vite.config.ts`.
+- Avoid PascalCase, camelCase, and snake_case for new app and package filenames.

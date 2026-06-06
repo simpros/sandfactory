@@ -11,10 +11,15 @@ export type ServiceConfig = {
   inject_as: string;
 };
 
+export type AgentConfig = {
+  command: string;
+};
+
 export type ProjectConfig = {
   apps: AppConfig[];
   services: ServiceConfig[];
   auto_deploy: boolean;
+  agent?: AgentConfig;
 };
 
 export type ParseResult =
@@ -130,7 +135,27 @@ export function parseProjectConfig(raw: string): ParseResult {
     return { ok: false, errors };
   }
 
-  return { ok: true, config: { apps, services, auto_deploy } };
+  // Validate agent (optional)
+  let agent: AgentConfig | undefined;
+  if ("agent" in doc) {
+    const agentRaw = doc.agent;
+    if (agentRaw === null || typeof agentRaw !== "object" || Array.isArray(agentRaw)) {
+      errors.push("agent: must be a mapping.");
+    } else {
+      const agentDoc = agentRaw as Record<string, unknown>;
+      if (!("command" in agentDoc) || typeof agentDoc.command !== "string" || !agentDoc.command.trim()) {
+        errors.push("agent.command: required string field is missing or empty.");
+      } else {
+        agent = { command: agentDoc.command };
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    return { ok: false, errors };
+  }
+
+  return { ok: true, config: { apps, services, auto_deploy, agent } };
 }
 
 const CONFIG_RELATIVE_PATH = join(".sandcastle", "config.yaml");

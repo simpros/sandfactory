@@ -82,9 +82,9 @@
   <title>Projects | Sandfactory</title>
 </svelte:head>
 
-<div class="p-6">
+<div class="flex h-[calc(100dvh-56px)] p-6">
   <div
-    class="bg-mac-window border-mac-border shadow-mac-window inline-block w-full max-w-170 border"
+    class="bg-mac-window border-mac-border shadow-mac-window flex max-h-full w-full max-w-170 flex-col overflow-hidden border"
   >
     <!-- Pinstripe title bar -->
     <div
@@ -169,7 +169,7 @@
     </div>
 
     <!-- Two-panel content -->
-    <div class="flex min-h-[340px]">
+    <div class="flex min-h-0 flex-1">
       <!-- Left sidebar: navigation -->
       <div
         class="bg-mac-surface border-mac-border-light flex w-40 shrink-0 flex-col border-r shadow-[inset_-1px_0_0_#fff]"
@@ -197,7 +197,7 @@
       </div>
 
       <!-- Main content: white area -->
-      <div class="flex flex-1 flex-col bg-white p-4">
+      <div class="flex min-h-0 flex-1 flex-col overflow-hidden bg-white p-4">
         <p class="mb-1 text-[15px] font-bold text-black">Projects</p>
         <hr
           class="border-mac-border-light mb-3 border-t border-none shadow-[0_1px_0_#fff]"
@@ -301,13 +301,16 @@
 
         <!-- Project list fieldset -->
         <fieldset
-          class="border-mac-border-light shadow-mac-etched bg-mac-window border px-2.5 pt-4 pb-2.5"
+          class="border-mac-border-light shadow-mac-etched bg-mac-window flex min-h-0 flex-1 flex-col border px-2.5 pt-4 pb-2.5"
         >
           <legend
             class="bg-mac-window px-1 text-[13px] font-bold text-black"
             >Registered Projects</legend
           >
-          <div class="space-y-1.5 text-sm" data-testid="project-list">
+          <div
+            class="min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-1 text-sm"
+            data-testid="project-list"
+          >
             <svelte:boundary>
               {#each await listRegisteredProjects() as project (project.id)}
                 <div
@@ -319,8 +322,10 @@
                   >
                     <div class="flex items-center gap-2">
                       <span class="text-[#383]">●</span>
-                      <span class="font-bold text-black"
-                        >{project.name}</span
+                      <a
+                        class="font-bold text-black hover:underline"
+                        href={resolve(`/projects/${project.id}`)}
+                        >{project.name}</a
                       >
                     </div>
                     <span

@@ -50,8 +50,8 @@
   <title>Settings | Sandfactory</title>
 </svelte:head>
 
-<div class="p-6">
-  <div class="bg-mac-window border border-mac-border shadow-mac-window inline-block w-full max-w-190">
+<div class="flex h-[calc(100dvh-56px)] p-6">
+  <div class="bg-mac-window border border-mac-border shadow-mac-window flex max-h-full w-full max-w-190 flex-col overflow-hidden">
       <div class="h-6 mac-pinstripe border-b border-mac-border flex items-center justify-center relative select-none shrink-0">
         <button class="absolute left-1.5 size-3.5 bg-mac-btn-face border border-mac-btn-border flex items-center justify-center text-[10px] leading-none active:bg-[#aaa]" type="button">
           <span class="text-[9px]">✕</span>
@@ -103,7 +103,7 @@
         </div>
       </div>
 
-      <div class="flex min-h-[340px]">
+      <div class="flex min-h-0 flex-1">
         <div
           class="flex w-40 shrink-0 flex-col bg-mac-surface border-r border-mac-border-light shadow-[inset_-1px_0_0_#fff]"
         >
@@ -129,7 +129,7 @@
           {/each}
         </div>
 
-        <div class="flex flex-1 flex-col gap-3 bg-white p-4">
+        <div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto bg-white p-4">
           <div>
             <p class="mb-1 text-[15px] font-bold text-black">Settings</p>
             <hr class="border-none border-t border-mac-border-light shadow-[0_1px_0_#fff] mb-3">
