@@ -2,6 +2,8 @@ import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
+export { detectDockerfiles } from "./project-onboarding";
+
 export type GenerateConfigInput = {
   localPath: string;
   dockerfilePath: string;
@@ -48,29 +50,4 @@ export async function generateProjectConfig(
   await writeFile(configPath, buildConfigYaml(input), "utf-8");
 
   return { ok: true };
-}
-
-/**
- * Scans the project directory for Dockerfiles (up to depth 3, skipping
- * .sandcastle/, node_modules/, and .git/) and returns their paths relative
- * to `localPath`.
- */
-export async function detectDockerfiles(localPath: string): Promise<string[]> {
-  const glob = new Bun.Glob("**/{Dockerfile,Containerfile}");
-
-  const results: string[] = [];
-
-  for await (const file of glob.scan({ cwd: localPath, dot: false })) {
-    // Exclude anything inside .sandcastle/, node_modules/, or .git/
-    const parts = file.split("/");
-    const excluded = [".sandcastle", "node_modules", ".git"];
-    if (parts.some((p) => excluded.includes(p))) continue;
-
-    // Honour the depth limit (max 3 directory levels deep)
-    if (parts.length > 4) continue; // e.g. a/b/c/Dockerfile = 4 parts
-
-    results.push(file);
-  }
-
-  return results.sort();
 }
