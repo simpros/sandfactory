@@ -1,14 +1,18 @@
 <script lang="ts">
+  import { resolve } from "$app/paths";
+
   import type { AgentRun } from "$lib/server/agent-runs";
 
   let {
     runs,
+    projectId,
     formatTime,
     formatDuration,
     statusColor,
     statusLabel,
   }: {
     runs: AgentRun[];
+    projectId: string;
     formatTime: (iso: string) => string;
     formatDuration: (
       startedAt: string,
@@ -45,12 +49,20 @@
             <span class={["font-bold", statusColor(run.status)]}>
               {statusLabel(run.status)}
             </span>
-            <span class="text-mac-muted truncate">
-              {formatTime(run.startedAt)}
-            </span>
-            <span class="text-[#555]">
-              {formatDuration(run.startedAt, run.finishedAt)}
-            </span>
+            <div class="flex items-center gap-2">
+              <span class="text-mac-muted truncate">
+                {formatTime(run.startedAt)}
+              </span>
+              <span class="text-[#555]">
+                {formatDuration(run.startedAt, run.finishedAt)}
+              </span>
+              <a
+                class="border-mac-border-light bg-mac-window px-1.5 py-0.5 text-[11px] text-[#333] underline"
+                href={resolve(`/projects/${projectId}/runs/${run.id}`)}
+              >
+                View details
+              </a>
+            </div>
           </div>
           {#if run.branch || run.failureMessage || (run.commits && run.commits.length > 0)}
             <div class="border-t border-[#eee] px-2 py-1">

@@ -1,5 +1,5 @@
 import { defineRelations } from "drizzle-orm";
-import { index, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 import {
   account,
@@ -48,8 +48,30 @@ export const agentRuns = sqliteTable(
   (table) => [index("agent_runs_project_id_idx").on(table.projectId)]
 );
 
+export const agentRunEvents = sqliteTable(
+  "agent_run_events",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    runId: text("run_id")
+      .notNull()
+      .references(() => agentRuns.id),
+    type: text("type").notNull(),
+    stream: text("stream"),
+    text: text("text"),
+    status: text("status"),
+    finishedAt: text("finished_at"),
+    failureMessage: text("failure_message"),
+    createdAt: text("created_at").notNull(),
+  },
+  (table) => [
+    index("agent_run_events_run_id_idx").on(table.runId),
+    index("agent_run_events_run_id_id_idx").on(table.runId, table.id),
+  ]
+);
+
 export const schema = {
   account,
+  agentRunEvents,
   agentRuns,
   apikey,
   projects,
@@ -83,6 +105,13 @@ export const relations = defineRelations(schema, (r) => ({
     project: r.one.projects({
       from: r.agentRuns.projectId,
       to: r.projects.id,
+    }),
+    events: r.many.agentRunEvents(),
+  },
+  agentRunEvents: {
+    run: r.one.agentRuns({
+      from: r.agentRunEvents.runId,
+      to: r.agentRuns.id,
     }),
   },
 }));

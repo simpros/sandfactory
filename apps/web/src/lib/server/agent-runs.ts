@@ -3,6 +3,8 @@ import { randomUUID } from "node:crypto";
 import { type Db, agentRuns } from "@sandfactory/db";
 import { and, desc, eq } from "drizzle-orm";
 
+import { recordAgentRunOutput, recordAgentRunTerminal } from "./agent-run-events";
+
 export type AgentRunStatus = "running" | "succeeded" | "failed";
 
 export type AgentRun = {
@@ -24,6 +26,7 @@ export type ExecuteResult = {
 export type ExecuteFn = (input: {
   command: string;
   cwd: string;
+  onOutput?: (output: { stream: "stdout" | "stderr"; text: string }) => Promise<void>;
 }) => Promise<ExecuteResult>;
 
 export type StartRunInput = {
@@ -86,31 +89,56 @@ export async function startAgentRun({
     })
     .run();
 
-  const execution = execute({ command: agentCommand, cwd: projectPath })
-    .then((result) => {
+  const execution = execute({
+    command: agentCommand,
+    cwd: projectPath,
+    onOutput: ({ stream, text }) =>
+      recordAgentRunOutput(db, {
+        runId: run.id,
+        stream,
+        text,
+      }).then(() => undefined),
+  })
+    .then(async (result) => {
+      const finishedAt = new Date().toISOString();
+
       db.update(agentRuns)
         .set({
           status: "succeeded",
-          finishedAt: new Date().toISOString(),
+          finishedAt,
           branch: result.branch,
           commits:
             result.commits.length > 0 ? JSON.stringify(result.commits) : null,
         })
         .where(eq(agentRuns.id, run.id))
         .run();
+
+      await recordAgentRunTerminal(db, {
+        runId: run.id,
+        status: "succeeded",
+        finishedAt,
+      });
     })
-    .catch((error: unknown) => {
+    .catch(async (error: unknown) => {
       const failureMessage =
         error instanceof Error ? error.message : "Agent run failed.";
+      const finishedAt = new Date().toISOString();
 
       db.update(agentRuns)
         .set({
           status: "failed",
-          finishedAt: new Date().toISOString(),
+          finishedAt,
           failureMessage,
         })
         .where(eq(agentRuns.id, run.id))
         .run();
+
+      await recordAgentRunTerminal(db, {
+        runId: run.id,
+        status: "failed",
+        finishedAt,
+        failureMessage,
+      });
     });
 
   return { ok: true, run, execution };
@@ -142,4 +170,35 @@ export function listAgentRuns(
         ? (JSON.parse(row.commits) as string[])
         : null,
     }));
+}
+
+export function getAgentRun(
+  db: Db["db"],
+  projectId: string,
+  runId: string
+): AgentRun | null {
+  const row = db
+    .select({
+      id: agentRuns.id,
+      projectId: agentRuns.projectId,
+      status: agentRuns.status,
+      startedAt: agentRuns.startedAt,
+      finishedAt: agentRuns.finishedAt,
+      branch: agentRuns.branch,
+      failureMessage: agentRuns.failureMessage,
+      commits: agentRuns.commits,
+    })
+    .from(agentRuns)
+    .where(and(eq(agentRuns.projectId, projectId), eq(agentRuns.id, runId)))
+    .get();
+
+  if (!row) {
+    return null;
+  }
+
+  return {
+    ...row,
+    status: row.status as AgentRunStatus,
+    commits: row.commits ? (JSON.parse(row.commits) as string[]) : null,
+  };
 }

@@ -15,9 +15,24 @@
     detectedDockerfiles: string[];
   } = $props();
 
-  const generateForm = generateProjectConfigForm;
-  let generateError = $state<string | null>(null);
   const defaultAgentCommand = "npx tsx .sandcastle/main.ts";
+  const generateForm = generateProjectConfigForm;
+  const dockerfilePathField = generateForm.fields.dockerfilePath.as("text");
+  const portField = generateForm.fields.port.as("text");
+  const agentCommandField = generateForm.fields.agentCommand.as(
+    "text",
+    defaultAgentCommand
+  );
+  let generateError = $state<string | null>(null);
+
+  function fieldIssue(name: "dockerfilePath" | "port" | "agentCommand") {
+    const message = generateForm.fields[name].issues()?.[0]?.message;
+    return typeof message === "string"
+      ? message
+      : message
+        ? String(message)
+        : undefined;
+  }
 
   const enhancedGenerate = generateForm.enhance(async ({ submit }) => {
     generateError = null;
@@ -73,8 +88,9 @@
         {#if detectedDockerfiles.length > 1}
           <select
             id="dockerfile-path"
-            name="dockerfilePath"
+            bind:value={dockerfilePathField.value}
             class="border-mac-border-light h-7 border bg-white px-1.5 text-sm text-black shadow-[inset_1px_1px_2px_rgba(0,0,0,0.08)]"
+            name={dockerfilePathField.name}
           >
             {#each detectedDockerfiles as df (df)}
               <option value={df}>{df}</option>
@@ -84,13 +100,15 @@
         {:else}
           <input
             id="dockerfile-path"
-            name="dockerfilePath"
             type="text"
+            {...dockerfilePathField}
             class="border-mac-border-light h-7 border bg-white px-1.5 text-sm text-black shadow-[inset_1px_1px_2px_rgba(0,0,0,0.08)]"
-            value={detectedDockerfiles[0] ?? "Dockerfile"}
             placeholder="Dockerfile"
             data-testid="dockerfile-path-input"
           />
+        {/if}
+        {#if fieldIssue("dockerfilePath")}
+          <p class="text-[13px] text-red-700">⚠ {fieldIssue("dockerfilePath")}</p>
         {/if}
       </div>
 
@@ -100,14 +118,17 @@
         </label>
         <input
           id="app-port"
-          name="port"
           type="number"
+          {...portField}
           min="1"
           max="65535"
           class="border-mac-border-light h-7 w-28 border bg-white px-1.5 text-sm text-black shadow-[inset_1px_1px_2px_rgba(0,0,0,0.08)]"
           placeholder="3000"
           data-testid="port-input"
         />
+        {#if fieldIssue("port")}
+          <p class="text-[13px] text-red-700">⚠ {fieldIssue("port")}</p>
+        {/if}
       </div>
 
       <div class="flex flex-col gap-1">
@@ -117,12 +138,14 @@
         </label>
         <input
           id="agent-command"
-          name="agentCommand"
           type="text"
+          {...agentCommandField}
           class="border-mac-border-light h-7 border bg-white px-1.5 font-mono text-sm text-black shadow-[inset_1px_1px_2px_rgba(0,0,0,0.08)]"
-          value={defaultAgentCommand}
           data-testid="agent-command-input"
         />
+        {#if fieldIssue("agentCommand")}
+          <p class="text-[13px] text-red-700">⚠ {fieldIssue("agentCommand")}</p>
+        {/if}
       </div>
 
       <div>
