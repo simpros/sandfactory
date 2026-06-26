@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { mkdir, readdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-import type { AppConfig } from "./project-config";
+import type { AppConfig, ReadResult } from "./project-config";
 import { parseProjectConfig } from "./project-config";
 
 export type WriteProjectConfigInput = {
@@ -76,6 +76,24 @@ export async function detectDockerfiles(localPath: string): Promise<string[]> {
   }
 
   return results.sort();
+}
+
+export type OnboardingPanel =
+  | { panel: "init-sandcastle" }
+  | { panel: "generate-config" }
+  | { panel: "ready" }
+  | { panel: "config-error"; errors: string[] };
+
+export function resolveOnboardingPanel(
+  sandcastleInitialized: boolean,
+  config: ReadResult
+): OnboardingPanel {
+  if (!sandcastleInitialized) return { panel: "init-sandcastle" };
+  if (!config.ok) {
+    if (config.missing) return { panel: "generate-config" };
+    return { panel: "config-error", errors: config.errors };
+  }
+  return { panel: "ready" };
 }
 
 export async function checkSandcastleInitialized(

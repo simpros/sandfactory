@@ -7,6 +7,7 @@ import { parseProjectConfig } from "./project-config";
 import {
   checkSandcastleInitialized,
   detectDockerfiles,
+  resolveOnboardingPanel,
   writeProjectConfig,
 } from "./project-onboarding";
 
@@ -143,5 +144,67 @@ describe("checkSandcastleInitialized", () => {
     const result = await checkSandcastleInitialized(projectDir);
 
     expect(result).toEqual({ initialized: false });
+  });
+});
+
+describe("resolveOnboardingPanel", () => {
+  test("returns init-sandcastle when sandcastle is not initialized", () => {
+    const result = resolveOnboardingPanel(false, {
+      ok: false,
+      missing: true,
+      errors: [".sandfactory/config.yaml not found in project."],
+    });
+
+    expect(result).toEqual({ panel: "init-sandcastle" });
+  });
+
+  test("returns init-sandcastle when sandcastle not initialized even if config exists", () => {
+    const result = resolveOnboardingPanel(false, {
+      ok: true,
+      config: {
+        apps: [{ dockerfile_path: "Dockerfile", port: 3000 }],
+        services: [],
+        auto_deploy: false,
+      },
+    });
+
+    expect(result).toEqual({ panel: "init-sandcastle" });
+  });
+
+  test("returns generate-config when sandcastle initialized but config missing", () => {
+    const result = resolveOnboardingPanel(true, {
+      ok: false,
+      missing: true,
+      errors: [".sandfactory/config.yaml not found in project."],
+    });
+
+    expect(result).toEqual({ panel: "generate-config" });
+  });
+
+  test("returns ready when sandcastle initialized and valid config exists", () => {
+    const result = resolveOnboardingPanel(true, {
+      ok: true,
+      config: {
+        apps: [{ dockerfile_path: "Dockerfile", port: 3000 }],
+        services: [],
+        auto_deploy: false,
+        agent: { command: "npx tsx .sandcastle/main.ts" },
+      },
+    });
+
+    expect(result).toEqual({ panel: "ready" });
+  });
+
+  test("returns config-error when sandcastle initialized but config is invalid", () => {
+    const result = resolveOnboardingPanel(true, {
+      ok: false,
+      missing: false,
+      errors: ["apps[0].port must be a positive integer"],
+    });
+
+    expect(result).toEqual({
+      panel: "config-error",
+      errors: ["apps[0].port must be a positive integer"],
+    });
   });
 });

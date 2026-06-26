@@ -17,17 +17,26 @@ import {
   detectDockerfiles,
   generateProjectConfig,
 } from "$lib/server/project-config-generator";
+import {
+  checkSandcastleInitialized,
+  resolveOnboardingPanel,
+  type OnboardingPanel,
+} from "$lib/server/project-onboarding";
 import { type Project, listProjects } from "$lib/server/projects";
 
 // ---------------------------------------------------------------------------
 // Shared data query
 // ---------------------------------------------------------------------------
 
+export type { OnboardingPanel };
+
 export type ProjectDetail = {
   project: Project;
   config: ReadResult;
   runs: AgentRun[];
   detectedDockerfiles: string[];
+  sandcastleInitialized: boolean;
+  onboardingPanel: OnboardingPanel;
 };
 
 export const getProjectDetail = query(
@@ -39,13 +48,22 @@ export const getProjectDetail = query(
     const project = listProjects(db).find((p) => p.id === projectId);
     if (!project) throw error(404, "Project not found.");
 
-    const [config, runs, detectedDockerfiles] = await Promise.all([
-      readProjectConfig(project.localPath),
-      listAgentRuns(db, project.id),
-      detectDockerfiles(project.localPath),
-    ]);
+    const [config, runs, detectedDockerfiles, { initialized: sandcastleInitialized }] =
+      await Promise.all([
+        readProjectConfig(project.localPath),
+        listAgentRuns(db, project.id),
+        detectDockerfiles(project.localPath),
+        checkSandcastleInitialized(project.localPath),
+      ]);
 
-    return { project, config, runs, detectedDockerfiles };
+    return {
+      project,
+      config,
+      runs,
+      detectedDockerfiles,
+      sandcastleInitialized,
+      onboardingPanel: resolveOnboardingPanel(sandcastleInitialized, config),
+    };
   }
 );
 

@@ -4,6 +4,7 @@
   import { getProjectDetail } from "./project-detail.remote";
   import AgentRunPanel from "./agent-run-panel.svelte";
   import GenerateConfigPanel from "./generate-config-panel.svelte";
+  import InitSandcastlePanel from "./init-sandcastle-panel.svelte";
   import ProjectHeader from "./project-header.svelte";
   import RunHistoryPanel from "./run-history-panel.svelte";
   import type { AgentRun } from "$lib/server/agent-runs";
@@ -169,30 +170,60 @@
             {@const config = detail.config}
             {@const runs = detail.runs}
             {@const detectedDockerfiles = detail.detectedDockerfiles}
-            {@const agentCommand =
-              config.ok && config.config.agent?.command
-                ? config.config.agent.command
-                : null}
-            {@const configMissing = !config.ok && config.missing}
+            {@const onboarding = detail.onboardingPanel}
 
             <ProjectHeader {project} />
 
-            <AgentRunPanel {agentCommand} projectId={project.id} />
-
-            <GenerateConfigPanel
-              visible={configMissing}
-              projectId={project.id}
-              {detectedDockerfiles}
-            />
-
-            <RunHistoryPanel
-              projectId={project.id}
-              {runs}
-              {formatTime}
-              {formatDuration}
-              {statusColor}
-              {statusLabel}
-            />
+            {#if onboarding.panel === "init-sandcastle"}
+              <InitSandcastlePanel />
+            {:else if onboarding.panel === "generate-config"}
+              <GenerateConfigPanel
+                projectId={project.id}
+                {detectedDockerfiles}
+              />
+            {:else if onboarding.panel === "ready"}
+              {@const agentCommand = config.ok
+                ? (config.config.agent?.command ?? null)
+                : null}
+              {@const apps = config.ok ? config.config.apps : []}
+              {#if apps.length > 0}
+                <div class="mb-2.5">
+                  <p class="mb-1 text-[12px] font-bold text-[#333]">Declared Apps:</p>
+                  <ul class="ml-2 flex flex-col gap-0.5">
+                    {#each apps as app (app.dockerfile_path)}
+                      <li class="text-[12px] text-[#555]">
+                        <span class="font-mono">{app.dockerfile_path}</span>
+                        <span class="text-[#888]"> · port {app.port}</span>
+                      </li>
+                    {/each}
+                  </ul>
+                </div>
+              {/if}
+              <AgentRunPanel {agentCommand} projectId={project.id} />
+              <RunHistoryPanel
+                projectId={project.id}
+                {runs}
+                {formatTime}
+                {formatDuration}
+                {statusColor}
+                {statusLabel}
+              />
+            {:else if onboarding.panel === "config-error"}
+              <div
+                class="border border-[#c44] bg-[#fff0f0] px-2 py-2 text-[13px] text-red-700"
+                data-testid="config-errors"
+              >
+                <p class="mb-1 font-bold">
+                  ⚠ <span class="font-mono">.sandfactory/config.yaml</span> is
+                  invalid:
+                </p>
+                <ul class="ml-4 list-disc">
+                  {#each onboarding.errors as err (err)}
+                    <li>{err}</li>
+                  {/each}
+                </ul>
+              </div>
+            {/if}
           {:catch}
             <p class="text-[13px] text-red-700">⚠ Project not found.</p>
           {/await}
