@@ -1,6 +1,6 @@
 # Subprocess execution of sandcastle scripts
 
-Sandfactory triggers agent runs by executing each project's `.sandcastle/main.ts` as a subprocess (`npx tsx .sandcastle/main.ts`), rather than importing and calling sandcastle's TypeScript API directly. Parameters are passed via `SANDFACTORY_`-prefixed environment variables. The command to execute is declared in the project's `.sandcastle/config.yaml` under `agent.command`. This keeps each project in full control of its own orchestration logic (which template, which review steps, which model) while sandfactory monitors the subprocess output and git state for results.
+Sandfactory triggers agent runs by executing each project's `.sandcastle/main.ts` as a subprocess (`npx tsx .sandcastle/main.ts`), rather than importing and calling sandcastle's TypeScript API directly. Parameters are passed via `SANDFACTORY_`-prefixed environment variables. The command to execute is declared in the project's `.sandfactory/config.yaml` under `agent.command`. This keeps each project in full control of its own orchestration logic (which template, which review steps, which model) while sandfactory monitors the subprocess output and git state for results.
 
 ## Considered Options
 

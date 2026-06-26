@@ -373,7 +373,7 @@
                       data-testid="project-config-missing"
                     >
                       No <span class="font-mono"
-                        >.sandcastle/config.yaml</span
+                        >.sandfactory/config.yaml</span
                       > found.
                     </p>
                   {:else}

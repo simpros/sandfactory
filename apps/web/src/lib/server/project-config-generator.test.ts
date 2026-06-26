@@ -49,10 +49,10 @@ describe("generateProjectConfig", () => {
     expect(readResult.config.agent?.command).toBe("npx tsx .sandcastle/main.ts");
   });
 
-  test("creates the .sandcastle/ directory when it does not already exist", async () => {
+  test("creates the .sandfactory/ directory when it does not already exist", async () => {
     const projectDir = makeTempDir("project");
 
-    // No .sandcastle/ directory yet
+    // No .sandfactory/ directory yet
     const result = await generateProjectConfig({
       localPath: projectDir,
       dockerfilePath: "Dockerfile",

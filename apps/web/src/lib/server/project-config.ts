@@ -158,7 +158,7 @@ export function parseProjectConfig(raw: string): ParseResult {
   return { ok: true, config: { apps, services, auto_deploy, agent } };
 }
 
-const CONFIG_RELATIVE_PATH = join(".sandcastle", "config.yaml");
+const CONFIG_RELATIVE_PATH = join(".sandfactory", "config.yaml");
 
 export async function readProjectConfig(localPath: string): Promise<ReadResult> {
   const configPath = join(localPath, CONFIG_RELATIVE_PATH);
@@ -168,7 +168,7 @@ export async function readProjectConfig(localPath: string): Promise<ReadResult> 
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code;
     if (code === "ENOENT") {
-      return { ok: false, missing: true, errors: [`.sandcastle/config.yaml not found in project.`] };
+      return { ok: false, missing: true, errors: [`.sandfactory/config.yaml not found in project.`] };
     }
     const message = err instanceof Error ? err.message : String(err);
     return { ok: false, missing: false, errors: [`Could not read config: ${message}`] };
