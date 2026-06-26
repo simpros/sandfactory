@@ -162,7 +162,7 @@
       </div>
 
       <!-- Main content -->
-      <div class="flex min-h-0 flex-1 flex-col overflow-hidden bg-white p-4">
+      <div class="flex min-h-0 flex-1 flex-col overflow-y-auto bg-white p-4">
         <svelte:boundary>
           {#await projectDetail then detail}
             {@const project = detail.project}
@@ -186,6 +186,7 @@
             />
 
             <RunHistoryPanel
+              projectId={project.id}
               {runs}
               {formatTime}
               {formatDuration}

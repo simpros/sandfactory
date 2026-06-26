@@ -60,9 +60,14 @@ export const getProjectDetail = query(
 async function realExecute({
   command: cmd,
   cwd,
+  onOutput,
 }: {
   command: string;
   cwd: string;
+  onOutput?: (output: {
+    stream: "stdout" | "stderr";
+    text: string;
+  }) => Promise<void>;
 }): Promise<ExecuteResult> {
   const headBefore = await getGitHead(cwd);
 
@@ -73,10 +78,13 @@ async function realExecute({
     env: { ...process.env },
   });
 
-  const exitCode = await proc.exited;
+  const [, stderr, exitCode] = await Promise.all([
+    readAgentRunStream(proc.stdout, "stdout", onOutput),
+    readAgentRunStream(proc.stderr, "stderr", onOutput),
+    proc.exited,
+  ]);
 
   if (exitCode !== 0) {
-    const stderr = await new Response(proc.stderr).text();
     throw new Error(
       stderr.trim() || `Agent command exited with code ${exitCode}`
     );
@@ -86,6 +94,43 @@ async function realExecute({
   const commits = await getNewCommits(cwd, headBefore);
 
   return { branch, commits };
+}
+
+async function readAgentRunStream(
+  stream: ReadableStream<Uint8Array> | null,
+  streamName: "stdout" | "stderr",
+  onOutput?: (output: {
+    stream: "stdout" | "stderr";
+    text: string;
+  }) => Promise<void>
+) {
+  if (!stream) return "";
+
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let fullText = "";
+
+  try {
+    while (true) {
+      const chunk = await reader.read();
+
+      if (chunk.done) {
+        fullText += decoder.decode();
+        break;
+      }
+
+      const text = decoder.decode(chunk.value, { stream: true });
+      fullText += text;
+
+      if (text && onOutput) {
+        await onOutput({ stream: streamName, text });
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  return fullText;
 }
 
 async function getGitHead(cwd: string): Promise<string | null> {

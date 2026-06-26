@@ -58,12 +58,12 @@ _Avoid_: script, tool
 A deployable web application declared within a Project Config, identified by a Dockerfile path (e.g., `apps/web/Dockerfile`) and an exposed port. A single Project may declare multiple Apps (e.g., in a monorepo). Every App declared in a Project Config is built and deployed as part of every Preview for that Project.
 _Avoid_: service, container, target
 
-**Project Config** (`.sandcastle/config.yaml`):
-A per-repo file declaring the Apps to build (Dockerfile paths, ports) and the services to provision for each Preview. Services declare their mode (`shared` or `dedicated`), their data strategy (`fork` from a source or `seed` from a file/command), and which environment variable to inject into app containers (e.g., `inject_as: DATABASE_URL`). Stored inside `.sandcastle/` alongside the Sandcastle Config so all per-project automation lives in one directory.
+**Project Config** (`.sandfactory/config.yaml`):
+A per-repo file owned by sandfactory, declaring the Apps to build (Dockerfile paths, ports), the services to provision for each Preview, and the agent command used to trigger an Agent Run. Services declare their mode (`shared` or `dedicated`), their data strategy (`fork` from a source or `seed` from a file/command), and which environment variable to inject into app containers (e.g., `inject_as: DATABASE_URL`).
 _Avoid_: manifest, spec
 
 **Sandcastle Config** (`.sandcastle/`):
-A per-repo directory that contains both the sandcastle agent configuration (Dockerfile, prompts, hooks, owned by sandcastle) and the `config.yaml` file read by sandfactory (Apps, services, auto-deploy flag). Sandfactory reads but does not modify the sandcastle-owned files.
+A per-repo directory owned by sandcastle, containing the agent's entry point (`main.ts`), Dockerfile, prompts, and hooks. Sandfactory does not read or modify these files — it only checks for the directory's existence to determine whether sandcastle has been initialized.
 
 ## Relationships
 
