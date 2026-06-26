@@ -82,7 +82,7 @@
     {:else}
       <p class="text-[13px] text-[#888]">
         No <span class="font-mono">agent.command</span> declared in
-        <span class="font-mono">.sandcastle/config.yaml</span>.
+        <span class="font-mono">.sandfactory/config.yaml</span>.
       </p>
     {/if}
   </form>

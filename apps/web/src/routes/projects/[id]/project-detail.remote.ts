@@ -215,7 +215,7 @@ export const triggerAgentRun = form(
         ok: false,
         conflict: false,
         error: configResult.missing
-          ? "No .sandcastle/config.yaml found — cannot trigger an Agent Run."
+          ? "No .sandfactory/config.yaml found — cannot trigger an Agent Run."
           : `Project Config is invalid: ${configResult.errors.join("; ")}`,
       };
     }
@@ -225,7 +225,7 @@ export const triggerAgentRun = form(
         ok: false,
         conflict: false,
         error:
-          "No agent.command declared in .sandcastle/config.yaml — cannot trigger an Agent Run.",
+          "No agent.command declared in .sandfactory/config.yaml — cannot trigger an Agent Run.",
       };
     }
 

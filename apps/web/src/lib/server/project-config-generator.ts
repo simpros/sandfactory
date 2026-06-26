@@ -15,7 +15,7 @@ export type GenerateConfigResult =
   | { ok: true }
   | { ok: false; error: string };
 
-const SANDCASTLE_DIR = ".sandcastle";
+const SANDFACTORY_DIR = ".sandfactory";
 const CONFIG_FILE = "config.yaml";
 
 function buildConfigYaml(input: GenerateConfigInput): string {
@@ -43,10 +43,10 @@ export async function generateProjectConfig(
     };
   }
 
-  const sandcastleDir = join(input.localPath, SANDCASTLE_DIR);
-  await mkdir(sandcastleDir, { recursive: true });
+  const sandfactoryDir = join(input.localPath, SANDFACTORY_DIR);
+  await mkdir(sandfactoryDir, { recursive: true });
 
-  const configPath = join(sandcastleDir, CONFIG_FILE);
+  const configPath = join(sandfactoryDir, CONFIG_FILE);
   await writeFile(configPath, buildConfigYaml(input), "utf-8");
 
   return { ok: true };

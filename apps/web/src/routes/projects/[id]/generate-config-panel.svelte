@@ -58,7 +58,7 @@
     </legend>
 
     <p class="mb-2 text-[12px] text-[#555]">
-      No <span class="font-mono">.sandcastle/config.yaml</span> found. Fill in
+      No <span class="font-mono">.sandfactory/config.yaml</span> found. Fill in
       the details below to create one. First time? Run
       <span class="font-mono">npx @ai-hero/sandcastle init</span> in your
       project to scaffold the full <span class="font-mono">.sandcastle/</span>

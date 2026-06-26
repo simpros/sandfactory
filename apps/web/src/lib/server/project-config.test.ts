@@ -154,12 +154,12 @@ apps: []
 // ---------------------------------------------------------------------------
 
 describe("readProjectConfig", () => {
-  test("reads and parses the config from <localPath>/.sandcastle/config.yaml", async () => {
+  test("reads and parses the config from <localPath>/.sandfactory/config.yaml", async () => {
     const dir = mkdtempSync(join(tmpdir(), "sandfactory-cfg-"));
     try {
-      mkdirSync(join(dir, ".sandcastle"));
+      mkdirSync(join(dir, ".sandfactory"));
       writeFileSync(
-        join(dir, ".sandcastle", "config.yaml"),
+        join(dir, ".sandfactory", "config.yaml"),
         `apps:\n  - dockerfile_path: Dockerfile\n    port: 3000\n`,
       );
 
@@ -173,7 +173,7 @@ describe("readProjectConfig", () => {
     }
   });
 
-  test("returns a missing-file error when .sandcastle/config.yaml does not exist", async () => {
+  test("returns a missing-file error when .sandfactory/config.yaml does not exist", async () => {
     const dir = mkdtempSync(join(tmpdir(), "sandfactory-cfg-"));
     try {
       const result = await readProjectConfig(dir);
