@@ -6,11 +6,9 @@
   } from "./project-detail.remote";
 
   let {
-    visible,
     projectId,
     detectedDockerfiles,
   }: {
-    visible: boolean;
     projectId: string;
     detectedDockerfiles: string[];
   } = $props();
@@ -49,10 +47,9 @@
   });
 </script>
 
-{#if visible}
-  <fieldset
-    class="border-mac-border-light shadow-mac-etched bg-mac-window mb-2.5 border px-2.5 pt-4 pb-2.5"
-  >
+<fieldset
+  class="border-mac-border-light shadow-mac-etched bg-mac-window mb-2.5 border px-2.5 pt-4 pb-2.5"
+>
     <legend class="bg-mac-window px-1 text-[13px] font-bold text-black">
       Generate Project Config
     </legend>
@@ -158,6 +155,5 @@
           {generateForm.pending > 0 ? "Generating…" : "Generate config.yaml"}
         </button>
       </div>
-    </form>
-  </fieldset>
-{/if}
+  </form>
+</fieldset>

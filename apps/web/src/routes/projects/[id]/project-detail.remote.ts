@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+
 import { form, getRequestEvent, query } from "$app/server";
 import { error } from "@sveltejs/kit";
 import * as v from "valibot";
@@ -17,17 +19,26 @@ import {
   detectDockerfiles,
   generateProjectConfig,
 } from "$lib/server/project-config-generator";
+import {
+  checkSandcastleInitialized,
+  resolveOnboardingPanel,
+  type OnboardingPanel,
+} from "$lib/server/project-onboarding";
 import { type Project, listProjects } from "$lib/server/projects";
 
 // ---------------------------------------------------------------------------
 // Shared data query
 // ---------------------------------------------------------------------------
 
+export type { OnboardingPanel };
+
 export type ProjectDetail = {
   project: Project;
   config: ReadResult;
   runs: AgentRun[];
   detectedDockerfiles: string[];
+  sandcastleInitialized: boolean;
+  onboardingPanel: OnboardingPanel;
 };
 
 export const getProjectDetail = query(
@@ -39,13 +50,22 @@ export const getProjectDetail = query(
     const project = listProjects(db).find((p) => p.id === projectId);
     if (!project) throw error(404, "Project not found.");
 
-    const [config, runs, detectedDockerfiles] = await Promise.all([
-      readProjectConfig(project.localPath),
-      listAgentRuns(db, project.id),
-      detectDockerfiles(project.localPath),
-    ]);
+    const [config, runs, detectedDockerfiles, { initialized: sandcastleInitialized }] =
+      await Promise.all([
+        readProjectConfig(project.localPath),
+        listAgentRuns(db, project.id),
+        detectDockerfiles(project.localPath),
+        checkSandcastleInitialized(project.localPath),
+      ]);
 
-    return { project, config, runs, detectedDockerfiles };
+    return {
+      project,
+      config,
+      runs,
+      detectedDockerfiles,
+      sandcastleInitialized,
+      onboardingPanel: resolveOnboardingPanel(sandcastleInitialized, config),
+    };
   }
 );
 
@@ -69,9 +89,13 @@ async function realExecute({
     text: string;
   }) => Promise<void>;
 }): Promise<ExecuteResult> {
+  if (!existsSync(cwd)) {
+    throw new Error(`Project directory not found: ${cwd}`);
+  }
+
   const headBefore = await getGitHead(cwd);
 
-  const proc = Bun.spawn(["sh", "-c", cmd], {
+  const proc = Bun.spawn(["sh", "-c", `cd ${JSON.stringify(cwd)} && ${cmd}`], {
     cwd,
     stdout: "pipe",
     stderr: "pipe",
