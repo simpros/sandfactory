@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+
 import { form, getRequestEvent, query } from "$app/server";
 import { error } from "@sveltejs/kit";
 import * as v from "valibot";
@@ -87,9 +89,13 @@ async function realExecute({
     text: string;
   }) => Promise<void>;
 }): Promise<ExecuteResult> {
+  if (!existsSync(cwd)) {
+    throw new Error(`Project directory not found: ${cwd}`);
+  }
+
   const headBefore = await getGitHead(cwd);
 
-  const proc = Bun.spawn(["sh", "-c", cmd], {
+  const proc = Bun.spawn(["sh", "-c", `cd ${JSON.stringify(cwd)} && ${cmd}`], {
     cwd,
     stdout: "pipe",
     stderr: "pipe",
